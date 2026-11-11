@@ -70,7 +70,8 @@ export function Purchases({ items }) {
         <ul data-stagger className="overflow-hidden rounded-2xl bg-card">
           {visible.map((t) => (
             <li key={t.id} id={`row-${t.id}`} className={`flex items-center gap-3 border-t border-line py-3 pr-2 pl-4 first:border-t-0 ${busyId === t.id ? "opacity-40" : ""}`}>
-              <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+              <Link href={`/gastos/editar?id=${t.id}`} aria-label={`Editar ${t.title || t.type}`} className="flex min-w-0 flex-1 items-center gap-3 rounded-lg transition active:opacity-60">
+                <span className="flex min-w-0 flex-1 flex-col gap-0.5">
                 <span className="truncate text-base font-medium">{t.title || t.type}</span>
                 <span className="text-[13px] text-muted">
                   {t.type} · {shortDate.format(new Date(`${t.date}T00:00:00Z`))}
@@ -85,6 +86,7 @@ export function Purchases({ items }) {
                   <span className="rounded-full bg-fill px-2 py-0.5 text-[11px] font-semibold text-ink-2">{t.platform}</span>
                 </span>
               </span>
+              </Link>
               <button
                 type="button"
                 onClick={() => remove(t.id, `${t.title || t.type} · ${formatCOP(t.amount)}`)}

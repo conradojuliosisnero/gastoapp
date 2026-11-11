@@ -3,7 +3,7 @@
 import { useActionState, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createCategory, createTransaction } from "@/app/(app)/gastos/actions";
-import { formatCOP, formatMoney, parseMoney, usdToCop } from "@/lib/money";
+import { formatCOP, formatMoney, parseMoney, typingMoney, usdToCop } from "@/lib/money";
 import { installments } from "@/lib/credit";
 import Link from "next/link";
 import { toast } from "@/lib/toast";
@@ -16,17 +16,18 @@ const COPY = {
   juegos: { title: "Nueva compra", back: "/juegos", hint: "Ej. Expansión de historia", save: "Guardar compra", saved: "Compra guardada", newCat: "Ej. Pase de batalla", legend: "Tipo", what: "Juego" },
 };
 
-export default function NewExpenseForm({ categories: initialCategories, defaultDate, module = "gastos", usdRate = null, cards = [] }) {
-  const copy = COPY[module];
+// New expense or game purchase; with `tx` it edits an existing one (same form, prefilled).
+export default function NewExpenseForm({ categories: initialCategories, defaultDate, module = "gastos", usdRate = null, cards = [], tx = null }) {
+  const copy = tx ? { ...COPY[module], title: module === "juegos" ? "Editar compra" : "Editar gasto", back: `${COPY[module].back}?mes=${tx.date.slice(0, 7)}`, save: "Guardar cambios", saved: "Cambios guardados" } : COPY[module];
   const router = useRouter();
-  const [amount, setAmount] = useState("");
-  const [currency, setCurrency] = useState("COP");
-  const [platform, setPlatform] = useState("PS5");
-  const [date, setDate] = useState(defaultDate);
-  const [cardId, setCardId] = useState("");
-  const [count, setCount] = useState("1");
+  const [amount, setAmount] = useState(tx ? (tx.currency === "USD" ? (tx.usd / 100).toFixed(2) : typingMoney(String(tx.amount))) : "");
+  const [currency, setCurrency] = useState(tx?.currency ?? "COP");
+  const [platform, setPlatform] = useState(tx?.platform ?? "PS5");
+  const [date, setDate] = useState(tx?.date ?? defaultDate);
+  const [cardId, setCardId] = useState(tx?.cardId ?? "");
+  const [count, setCount] = useState(String(tx?.installments ?? 1));
   const [categories, setCategories] = useState(initialCategories);
-  const [selected, setSelected] = useState(initialCategories[0]?.id ?? "");
+  const [selected, setSelected] = useState(tx ? (tx.categoryId ?? "") : (initialCategories[0]?.id ?? ""));
   const [adding, setAdding] = useState(false);
   const [newName, setNewName] = useState("");
   const [creating, startCreating] = useTransition();
@@ -57,7 +58,9 @@ export default function NewExpenseForm({ categories: initialCategories, defaultD
 
   const cents = currency === "USD" ? parseMoney(amount, "USD") : null;
   const usdHint =
-    currency !== "USD"
+    tx?.currency === "USD" && parseMoney(amount, "USD") === tx.usd
+      ? `≈ ${formatCOP(tx.amount)} · tasa del día de la compra`
+      : currency !== "USD"
       ? null
       : !usdRate
         ? "No pudimos traer la tasa del dólar ahora. Intenta en un rato o registra en COP."
@@ -82,6 +85,7 @@ export default function NewExpenseForm({ categories: initialCategories, defaultD
     <form action={formAction} className="flex flex-col gap-6">
       <SheetHeader title={copy.title} cancelHref={copy.back} />
       <input type="hidden" name="module" value={module} />
+      {tx && <input type="hidden" name="id" value={tx.id} />}
 
       <AmountHero
         label="Monto"
@@ -95,7 +99,7 @@ export default function NewExpenseForm({ categories: initialCategories, defaultD
         }}
         hint={usdHint}
         required
-        autoFocus
+        autoFocus={!tx}
       />
 
       <Section
@@ -152,7 +156,7 @@ export default function NewExpenseForm({ categories: initialCategories, defaultD
         footer={date > defaultDate ? "Fecha futura: quedará como “Pago futuro” y no se descuenta hasta ese día." : null}
       >
         <Field label={copy.what}>
-          <input name="description" maxLength={80} placeholder={copy.hint} className={`${inputCls} text-right`} />
+          <input name="description" maxLength={80} placeholder={copy.hint} defaultValue={tx?.description ?? ""} className={`${inputCls} text-right`} />
         </Field>
         <Field label="Fecha">
           <input name="date" type="date" required value={date} onChange={(e) => setDate(e.target.value)} className={dateCls} />
@@ -162,7 +166,7 @@ export default function NewExpenseForm({ categories: initialCategories, defaultD
             <Segmented label="Plataforma" name="platform" options={["PS5", "PC", "Otra"]} value={platform} onChange={setPlatform} />
           </Field>
         ) : (
-          <SwitchField name="fijo" label="Gasto fijo" hint="Se repite cada mes" />
+          <SwitchField name="fijo" label="Gasto fijo" hint="Se repite cada mes" defaultChecked={tx?.kind === "fijo"} />
         )}
       </Section>
 

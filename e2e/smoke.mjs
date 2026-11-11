@@ -99,6 +99,19 @@ await step("validación: monto vacío muestra error", async () => {
   await role("heading", { name: "Movimientos" }).waitFor();
 });
 
+await step("editar un gasto ya guardado", async () => {
+  await role("link", { name: `Editar ${unique}` }).click();
+  await role("heading", { name: "Editar gasto" }).waitFor();
+  assert.equal(await amountField().inputValue(), "45.000");
+  assert.equal(await v(page.getByPlaceholder("Ej. Mercado")).inputValue(), unique);
+  assert.equal(await role("switch", { name: /Gasto fijo/ }).isChecked(), true);
+  await amountField().fill("46000");
+  await role("button", { name: "Guardar cambios" }).click();
+  await toastSays("Cambios guardados");
+  await page.waitForURL(/\/gastos\?mes=/);
+  await v(page.getByRole("listitem").filter({ hasText: unique })).getByText(/46\.000/).waitFor();
+});
+
 await step("definir presupuesto y ver el resumen", async () => {
   await role("button", { name: /Por categoría/ }).click();
   await role("link", { name: "Ajustar presupuestos" }).click();

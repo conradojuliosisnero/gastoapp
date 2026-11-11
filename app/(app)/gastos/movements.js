@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useTransition } from "react";
 import { formatCOP } from "@/lib/money";
 import { toast } from "@/lib/toast";
@@ -62,7 +63,8 @@ export default function Movements({ movements }) {
         <ul data-stagger className="overflow-hidden rounded-2xl bg-card">
           {visible.map((m) => (
             <li key={m.id} id={`mov-${m.id}`} className={`flex items-center gap-3 border-t border-line py-3 pr-2 pl-4 transition-opacity first:border-t-0 ${deletingId === m.id ? "opacity-40" : ""}`}>
-              <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+              <Link href={`/gastos/editar?id=${m.id}`} aria-label={`Editar ${m.description || m.category}`} className="flex min-w-0 flex-1 items-center gap-3 rounded-lg transition active:opacity-60">
+                <span className="flex min-w-0 flex-1 flex-col gap-0.5">
                 <span className="truncate text-base font-medium">{m.description || m.category}</span>
                 <span className="text-[13px] text-muted">
                   {m.category} · {shortDate.format(new Date(`${m.date}T00:00:00Z`))}
@@ -82,6 +84,7 @@ export default function Movements({ movements }) {
                   <span className="rounded-full bg-fill px-2 py-0.5 text-[11px] font-semibold text-ink-2">{m.kind === "fijo" ? "Fijo" : "Variable"}</span>
                 </span>
               </span>
+              </Link>
               <button
                 type="button"
                 onClick={() => remove(m)}

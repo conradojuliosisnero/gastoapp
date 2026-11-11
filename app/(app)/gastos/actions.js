@@ -3,7 +3,7 @@
 import { refresh } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
-import { encrypt } from "@/lib/crypto";
+import { decrypt, encrypt } from "@/lib/crypto";
 import { monthRange, parseAmount, parseMoney, usdToCop } from "@/lib/money";
 import { getUsdRate } from "@/lib/fx";
 
@@ -22,7 +22,10 @@ const newTransaction = z.object({
   installments: z.number().int().min(1, "Mínimo 1 cuota.").max(48, "Máximo 48 cuotas."),
 });
 
+// Creates an expense/purchase, or updates it when the form carries an `id` (editing).
 export async function createTransaction(_prev, formData) {
+  const id = formData.get("id") || null;
+  if (id && !z.uuid().safeParse(id).success) return { error: "Movimiento inválido." };
   const module = formData.get("module") || "gastos";
   const currency = module === "juegos" && formData.get("currency") === "USD" ? "USD" : "COP"; // only games take dollars
   const parsed = newTransaction.safeParse({
@@ -42,13 +45,19 @@ export async function createTransaction(_prev, formData) {
   const { amount, categoryId, description, date, kind, platform, cardId, installments } = parsed.data;
   // USD: keep the original cents and the rate; amount_enc is the COP equivalent so every total stays in pesos.
   let usd = null;
+  const supabase = await createClient();
   if (currency === "USD") {
-    const rate = await getUsdRate();
+    // Editing without changing the dollars keeps the rate of the purchase day.
+    let rate = null;
+    if (id) {
+      const { data: old } = await supabase.from("transactions").select("currency, original_amount_enc, fx_rate").eq("id", id).maybeSingle();
+      if (old?.currency === "USD" && old.original_amount_enc && Number(decrypt(old.original_amount_enc)) === amount) rate = Number(old.fx_rate);
+    }
+    rate ??= await getUsdRate();
     if (!rate) return { error: "No pudimos traer la tasa del dólar. Intenta en un rato o registra en COP." };
     usd = { rate, cop: usdToCop(amount, rate) };
   }
-  const supabase = await createClient();
-  const { error } = await supabase.from("transactions").insert({
+  const row = {
     module: parsed.data.module,
     currency,
     original_amount_enc: usd ? encrypt(amount) : null,
@@ -61,7 +70,8 @@ export async function createTransaction(_prev, formData) {
     kind,
     amount_enc: encrypt(usd ? usd.cop : amount),
     description_enc: description ? encrypt(description) : null,
-  });
+  };
+  const { error } = id ? await supabase.from("transactions").update(row).eq("id", id) : await supabase.from("transactions").insert(row);
   if (error) return { error: "No se pudo guardar. Intenta de nuevo." };
 
   refresh();
