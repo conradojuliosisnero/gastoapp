@@ -53,10 +53,10 @@ await step("pantalla Gastos con categorías por defecto", async () => {
 
 await step("crear gasto fijo desde el botón +", async () => {
   await page.getByRole("link", { name: "Agregar gasto" }).click();
-  await page.waitForURL(/\/gastos\/nuevo/);
+  await page.getByRole("heading", { name: "Nuevo gasto" }).waitFor();
   await page.getByPlaceholder("$0").fill("45000");
   assert.equal(await page.getByPlaceholder("$0").inputValue(), "$45.000");
-  await page.getByText("Comida", { exact: true }).click();
+  await page.getByRole("radio", { name: "Comida" }).check({ force: true });
   await page.getByPlaceholder("Ej. Mercado").fill(unique);
   await page.getByText("Gasto fijo (se repite cada mes)").click();
   await shot("03-nuevo-gasto");
@@ -78,7 +78,7 @@ await step("validación: monto vacío muestra error", async () => {
 
 await step("definir presupuesto y ver el resumen", async () => {
   await page.getByRole("link", { name: "Ajustar" }).click();
-  await page.waitForURL(/\/gastos\/presupuesto/);
+  await page.getByRole("heading", { name: "Presupuestos" }).waitFor();
   await page.getByLabel("Comida").fill("40000");
   await page.getByRole("button", { name: "Guardar" }).click();
   await page.waitForURL(/\/gastos$/);
