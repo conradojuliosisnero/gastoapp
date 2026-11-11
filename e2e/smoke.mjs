@@ -445,7 +445,7 @@ await step("tarjeta de crédito: compra en 3 cuotas y lo que hay que pagar", asy
   await page.goto(`${BASE_URL}/gastos/nuevo`);
   await amountField().fill("300000");
   await v(page.getByPlaceholder("Ej. Mercado")).fill(label);
-  await v(page.getByLabel("Pago")).selectOption({ label: `Crédito · ${card}` });
+  await v(page.getByRole("combobox", { name: "Medio de pago" })).selectOption({ label: `Crédito · ${card}` });
   await v(page.getByRole("spinbutton", { name: /Cuotas/ })).fill("3");
   await text(/3 cuotas de ≈ \$\s100\.000/).waitFor();
   await role("button", { name: "Guardar gasto" }).click();

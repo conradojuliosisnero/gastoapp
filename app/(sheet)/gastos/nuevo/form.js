@@ -185,6 +185,7 @@ export default function NewExpenseForm({ categories: initialCategories, defaultD
         <Field label="Pago">
           <select
             name="cardId"
+            aria-label="Medio de pago"
             value={cardId}
             onChange={(e) => setCardId(e.target.value)}
             className="min-w-0 max-w-full cursor-pointer appearance-none truncate rounded-lg bg-field px-2.5 py-1.5 text-right text-[15px] font-semibold text-accent outline-none focus-visible:ring-2 focus-visible:ring-accent"
