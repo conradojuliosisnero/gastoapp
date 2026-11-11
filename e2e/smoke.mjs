@@ -346,7 +346,7 @@ await step("videojuegos: límite, compra por plataforma y lista de deseos", asyn
   await text("No hay compras en esta plataforma.").waitFor();
   await role("radio", { name: "Todas", exact: true }).click();
 
-  await role("link", { name: "Agregar" }).click();
+  await role("link", { name: "Agregar a la lista de deseos" }).click();
   await role("heading", { name: "Lista de deseos" }).waitFor();
   await v(page.getByPlaceholder(/Juego de fútbol/)).fill(`${unique} deseo`);
   await v(page.getByRole("textbox", { name: "Precio actual" })).fill("150000");

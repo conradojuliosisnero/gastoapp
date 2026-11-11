@@ -104,7 +104,7 @@ export function Wishlist({ items }) {
       {dialog}
       <div className="flex items-center justify-between px-1">
         <h2 id="deseos" className="text-xl font-bold tracking-tight">Lista de deseos</h2>
-        <Link href="/juegos/deseo" className="flex min-h-9 items-center gap-1 rounded-full bg-accent/10 px-3.5 text-[15px] font-semibold text-accent transition active:scale-95">
+        <Link href="/juegos/deseo" aria-label="Agregar a la lista de deseos" className="flex min-h-9 items-center gap-1 rounded-full bg-accent/10 px-3.5 text-[15px] font-semibold text-accent transition active:scale-95">
           <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
           Agregar
         </Link>
