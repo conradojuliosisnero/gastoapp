@@ -34,7 +34,7 @@ const step = async (name, fn) => {
     console.log(`✓ ${name}`);
   } catch (e) {
     await page.screenshot({ path: `${SHOTS}/FALLO-${name.replace(/\W+/g, "_")}.png`, fullPage: true });
-    console.log(`✗ ${name}\n  ${e.message.split("\n").slice(0, 4).join("\n  ")}`);
+    console.log(`✗ ${name}\n  ${e.message.split("\n").slice(0, 12).join("\n  ")}`);
     await browser.close();
     process.exit(1);
   }
