@@ -2,57 +2,52 @@
 
 import { useActionState, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import Spinner from "@/app/spinner";
+import { Field, Section, Segmented, inputCls } from "@/app/form-kit";
 import { authenticate } from "./actions";
-
-const MODES = [
-  { id: "login", label: "Iniciar sesión" },
-  { id: "signup", label: "Crear cuenta" },
-];
 
 export default function LoginForm() {
   const [mode, setMode] = useState("login");
+  const [show, setShow] = useState(false);
   const [state, formAction, pending] = useActionState(authenticate, null);
   const confirmFailed = useSearchParams().get("error") === "confirmacion";
 
   return (
     <form action={formAction} className="flex flex-col gap-5">
-      <input type="hidden" name="mode" value={mode} />
+      <Segmented label="Modo" name="mode" options={[["login", "Iniciar sesión"], ["signup", "Crear cuenta"]]} value={mode} onChange={setMode} full />
 
-      <div role="group" aria-label="Modo" className="grid grid-cols-2 gap-0.5 rounded-[10px] bg-segment p-0.5">
-        {MODES.map((m) => (
-          <button
-            key={m.id}
-            type="button"
-            aria-pressed={mode === m.id}
-            onClick={() => setMode(m.id)}
-            className="min-h-9 rounded-lg text-sm font-semibold transition-colors aria-pressed:bg-card aria-pressed:shadow-sm"
-          >
-            {m.label}
-          </button>
-        ))}
-      </div>
-
-      <div className="overflow-hidden rounded-2xl bg-card">
-        <label className="flex min-h-12 items-center gap-3 px-4">
-          <span className="w-24 shrink-0 text-base">Correo</span>
-          <input name="email" type="email" required autoComplete="email" placeholder="tu@correo.com" className="min-w-0 flex-1 bg-transparent text-base outline-none" />
-        </label>
-        <div className="ml-4 h-px bg-line" />
-        <label className="flex min-h-12 items-center gap-3 px-4">
-          <span className="w-24 shrink-0 text-base">Contraseña</span>
+      <Section footer={mode === "signup" ? "Te enviaremos un correo para confirmar la cuenta." : null}>
+        <Field label="Correo">
+          <input name="email" type="email" required autoComplete="email" placeholder="tu@correo.com" className={inputCls} />
+        </Field>
+        <Field label="Contraseña" as="div">
           <input
             name="password"
-            type="password"
+            aria-label="Contraseña"
+            type={show ? "text" : "password"}
             required
             minLength={8}
             autoComplete={mode === "signup" ? "new-password" : "current-password"}
             placeholder="Mínimo 8 caracteres"
-            className="min-w-0 flex-1 bg-transparent text-base outline-none"
+            className={inputCls}
           />
-        </label>
-      </div>
+          <button
+            type="button"
+            aria-label={show ? "Ocultar contraseña" : "Mostrar contraseña"}
+            aria-pressed={show}
+            onClick={() => setShow((s) => !s)}
+            className="-mr-2 flex size-10 shrink-0 items-center justify-center rounded-full text-muted transition active:scale-90 active:bg-fill"
+          >
+            <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M2 12c1-2.5 5-7 10-7s9 4.5 10 7c-1 2.5-5 7-10 7S3 14.5 2 12z" />
+              <circle cx="12" cy="12" r="3" />
+              {!show && <path d="M3 3l18 18" />}
+            </svg>
+          </button>
+        </Field>
+      </Section>
 
-      <p aria-live="polite" className="min-h-5 px-1 text-sm">
+      <p aria-live="polite" className="min-h-5 px-4 text-sm font-medium">
         {state?.error && <span className="text-warn">{state.error}</span>}
         {state?.message && <span className="text-ok">{state.message}</span>}
         {!state && confirmFailed && <span className="text-warn">Ese enlace ya se usó o expiró. Si ya confirmaste tu cuenta, inicia sesión.</span>}
@@ -61,8 +56,9 @@ export default function LoginForm() {
       <button
         type="submit"
         disabled={pending}
-        className="min-h-12 rounded-2xl bg-primary text-[17px] font-semibold text-white transition active:scale-[0.98] disabled:opacity-70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        className="flex min-h-[52px] items-center justify-center gap-2 rounded-2xl bg-primary text-[17px] font-semibold text-white shadow-[0_8px_20px_rgba(10,102,216,0.3)] transition active:scale-[0.98] disabled:opacity-70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
       >
+        {pending && <Spinner className="size-5" />}
         {pending ? "Un momento…" : mode === "signup" ? "Crear cuenta" : "Entrar"}
       </button>
     </form>

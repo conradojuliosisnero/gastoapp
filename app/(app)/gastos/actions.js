@@ -4,7 +4,8 @@ import { refresh } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { encrypt } from "@/lib/crypto";
-import { monthRange, parseAmount } from "@/lib/money";
+import { monthRange, parseAmount, parseMoney, usdToCop } from "@/lib/money";
+import { getUsdRate } from "@/lib/fx";
 
 const MAX_AMOUNT = 1_000_000_000_000;
 
@@ -16,35 +17,49 @@ const newTransaction = z.object({
   kind: z.enum(["fijo", "variable"]),
   module: z.enum(["gastos", "juegos"]),
   platform: z.enum(["PS5", "PC", "Otra"]).nullable(),
+  currency: z.enum(["COP", "USD"]),
 });
 
 export async function createTransaction(_prev, formData) {
+  const module = formData.get("module") || "gastos";
+  const currency = module === "juegos" && formData.get("currency") === "USD" ? "USD" : "COP"; // only games take dollars
   const parsed = newTransaction.safeParse({
-    amount: parseAmount(formData.get("amount")) ?? undefined,
+    amount: parseMoney(formData.get("amount"), currency) || undefined,
     categoryId: formData.get("categoryId") || null,
     description: formData.get("description") ?? "",
     date: formData.get("date"),
     kind: formData.get("fijo") ? "fijo" : "variable",
-    module: formData.get("module") || "gastos",
+    module,
     platform: formData.get("platform") || null,
+    currency,
   });
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
-  const { amount, categoryId, description, date, kind, module, platform } = parsed.data;
+  const { amount, categoryId, description, date, kind, platform } = parsed.data;
+  // USD: keep the original cents and the rate; amount_enc is the COP equivalent so every total stays in pesos.
+  let usd = null;
+  if (currency === "USD") {
+    const rate = await getUsdRate();
+    if (!rate) return { error: "No pudimos traer la tasa del dólar. Intenta en un rato o registra en COP." };
+    usd = { rate, cop: usdToCop(amount, rate) };
+  }
   const supabase = await createClient();
   const { error } = await supabase.from("transactions").insert({
-    module,
+    module: parsed.data.module,
+    currency,
+    original_amount_enc: usd ? encrypt(amount) : null,
+    fx_rate: usd?.rate ?? null,
     platform: module === "juegos" ? platform : null,
     category_id: categoryId,
     occurred_on: date,
     kind,
-    amount_enc: encrypt(amount),
+    amount_enc: encrypt(usd ? usd.cop : amount),
     description_enc: description ? encrypt(description) : null,
   });
   if (error) return { error: "No se pudo guardar. Intenta de nuevo." };
 
   refresh();
-  return { ok: true, mes: date.slice(0, 7), module };
+  return { ok: true, mes: date.slice(0, 7), module: parsed.data.module };
 }
 
 export async function deleteTransaction(id) {

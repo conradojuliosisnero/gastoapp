@@ -6,6 +6,8 @@ import { isUpcoming, summarize } from "@/lib/gastos";
 import { formatCOP, monthRange, today } from "@/lib/money";
 import Movements, { CopyFixedButton } from "./movements";
 import CategoriesSheet from "./categories-sheet";
+import CountUp from "@/app/count-up";
+import Progress from "@/app/progress";
 
 export const metadata = { title: "Gastos" };
 
@@ -64,8 +66,8 @@ export default async function GastosPage({ searchParams }) {
   const over = summary.budget > 0 && summary.total > summary.budget;
 
   return (
-    <div className="flex flex-col gap-5">
-      <header className="flex flex-col gap-1 px-1">
+    <div className="flex flex-col gap-5 lg:grid lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:items-start lg:gap-6">
+      <header className="flex flex-col gap-1 px-1 lg:col-span-2">
         <h1 className="sr-only">Gastos</h1>
         <nav aria-label="Mes" className="flex items-center justify-between">
           <Link href={`/gastos?mes=${month.prev}`} aria-label="Mes anterior" className="flex size-11 items-center justify-center rounded-full text-accent transition active:scale-90 active:bg-accent/10">
@@ -78,14 +80,13 @@ export default async function GastosPage({ searchParams }) {
         </nav>
       </header>
 
+      <div className="flex min-w-0 flex-col gap-5">
       <section className="flex flex-col gap-3 rounded-[22px] bg-card p-5">
         <span className="text-[15px] text-muted">Gastado en el mes</span>
-        <span className="text-[36px] font-bold tracking-tight">{formatCOP(summary.total)}</span>
+        <CountUp value={summary.total} className="text-[36px] font-bold tracking-tight tabular-nums" />
         {summary.budget > 0 ? (
           <>
-            <div className="h-2 overflow-hidden rounded-full bg-line">
-              <div className={`h-2 rounded-full ${over ? "bg-warn" : "bg-accent"}`} style={{ width: `${pct}%` }} />
-            </div>
+            <Progress pct={pct} className={over ? "bg-warn" : "bg-accent"} />
             <div className="flex justify-between text-[13px] text-muted">
               <span>Presupuesto {formatCOP(summary.budget)}</span>
               <span className={over ? "font-semibold text-warn" : ""}>
@@ -108,6 +109,7 @@ export default async function GastosPage({ searchParams }) {
       </section>
 
       <CategoriesSheet rows={summary.rows} />
+      </div>
 
       <section className="flex flex-col gap-3">
         <h2 className="px-1 text-xl font-bold tracking-tight">Movimientos</h2>

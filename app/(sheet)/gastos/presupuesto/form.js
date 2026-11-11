@@ -7,6 +7,7 @@ import { toast } from "@/lib/toast";
 import { useConfirm } from "@/app/confirm";
 import Spinner from "@/app/spinner";
 import { SaveBar, SheetHeader } from "../../sheet-header";
+import { FormError, Section, inputCls } from "@/app/form-kit";
 
 const group = new Intl.NumberFormat("es-CO");
 
@@ -54,15 +55,13 @@ export default function BudgetForm({ categories: initialCategories }) {
   }
 
   return (
-    <form action={formAction} className="flex flex-col gap-5">
+    <form action={formAction} className="flex flex-col gap-6">
       {confirmDialog}
       <SheetHeader title="Categorías" cancelHref="/gastos" />
-      <p className="px-1 text-[15px] text-muted">Cuánto quieres gastar al mes en cada categoría. Déjalo vacío si no quieres límite.</p>
-
-      <div className="overflow-hidden rounded-2xl bg-card">
+      <Section title="Presupuesto mensual" footer="Cuánto quieres gastar al mes en cada categoría. Déjalo vacío si no quieres límite.">
         {categories.map((c) => (
-          <div key={c.id} className="flex min-h-12 items-center gap-2 border-t border-line pr-1 pl-4 first:border-t-0">
-            <label htmlFor={`budget-${c.id}`} className="flex-1 text-base">{c.name}</label>
+          <div key={c.id} className="flex min-h-[52px] items-center gap-2 pr-1 pl-4 transition-colors focus-within:bg-fill/60">
+            <label htmlFor={`budget-${c.id}`} className="flex-1 text-[15px] font-medium">{c.name}</label>
             <input
               id={`budget-${c.id}`}
               name={`budget:${c.id}`}
@@ -70,7 +69,11 @@ export default function BudgetForm({ categories: initialCategories }) {
               autoComplete="off"
               placeholder="Sin límite"
               defaultValue={c.budget ? `$${group.format(c.budget)}` : ""}
-              className="w-32 bg-transparent text-right text-base outline-none placeholder:text-muted"
+              onChange={(e) => {
+                const n = e.target.value.replace(/\D/g, "");
+                e.target.value = n ? `$${group.format(Number(n))}` : "";
+              }}
+              className="w-32 bg-transparent text-right text-base font-semibold tabular-nums outline-none placeholder:font-normal placeholder:text-muted/70"
             />
             <button
               type="button"
@@ -85,13 +88,14 @@ export default function BudgetForm({ categories: initialCategories }) {
             </button>
           </div>
         ))}
-      </div>
+      </Section>
 
-      <div className="flex items-center gap-2 rounded-2xl bg-card p-2 pl-4">
+      <Section title="Nueva categoría">
+      <div className="flex items-center gap-2 p-2 pl-4">
         <input
           aria-label="Nombre de la nueva categoría"
           maxLength={40}
-          placeholder="Nueva categoría (ej. Mascotas)"
+          placeholder="Ej. Mascotas"
           value={newName}
           onChange={(e) => setNewName(e.target.value)}
           onKeyDown={(e) => {
@@ -100,7 +104,7 @@ export default function BudgetForm({ categories: initialCategories }) {
               add();
             }
           }}
-          className="min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-muted"
+          className={inputCls}
         />
         <button
           type="button"
@@ -112,8 +116,9 @@ export default function BudgetForm({ categories: initialCategories }) {
           Agregar
         </button>
       </div>
+      </Section>
 
-      <p aria-live="polite" className="min-h-5 px-1 text-sm text-danger">{state?.error}</p>
+      <FormError error={state?.error} />
       <SaveBar pending={pending} label="Guardar presupuestos" />
     </form>
   );

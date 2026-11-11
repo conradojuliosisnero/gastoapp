@@ -5,6 +5,7 @@ import { formatCOP } from "@/lib/money";
 import { toast } from "@/lib/toast";
 import { useConfirm } from "@/app/confirm";
 import Spinner from "@/app/spinner";
+import { collapse, restore } from "@/lib/motion";
 import { copyFixedFromPreviousMonth, deleteTransaction } from "./actions";
 
 const FILTERS = [
@@ -27,9 +28,11 @@ export default function Movements({ movements }) {
     const ok = await confirm({ title: "¿Borrar este gasto?", message: `${label} · ${formatCOP(m.amount)}`, confirmLabel: "Borrar", destructive: true });
     if (!ok) return;
     setDeletingId(m.id);
+    const row = document.getElementById(`mov-${m.id}`);
     startTransition(async () => {
-      const result = await deleteTransaction(m.id);
+      const [result] = await Promise.all([deleteTransaction(m.id), collapse(row)]);
       setDeletingId(null);
+      if (result.error) restore(row);
       result.error ? toast(result.error, "error") : toast("Gasto borrado");
     });
   }
@@ -56,9 +59,9 @@ export default function Movements({ movements }) {
           {movements.length === 0 ? "Aún no hay movimientos este mes. Toca + para agregar uno." : "No hay movimientos con este filtro."}
         </p>
       ) : (
-        <ul className="overflow-hidden rounded-2xl bg-card">
+        <ul data-stagger className="overflow-hidden rounded-2xl bg-card">
           {visible.map((m) => (
-            <li key={m.id} className={`flex items-center gap-3 border-t border-line py-3 pr-2 pl-4 transition-opacity first:border-t-0 ${deletingId === m.id ? "opacity-40" : ""}`}>
+            <li key={m.id} id={`mov-${m.id}`} className={`flex items-center gap-3 border-t border-line py-3 pr-2 pl-4 transition-opacity first:border-t-0 ${deletingId === m.id ? "opacity-40" : ""}`}>
               <span className="flex min-w-0 flex-1 flex-col gap-0.5">
                 <span className="truncate text-base font-medium">{m.description || m.category}</span>
                 <span className="text-[13px] text-muted">

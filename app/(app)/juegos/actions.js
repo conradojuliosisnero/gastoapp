@@ -4,7 +4,7 @@ import { refresh } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { encrypt } from "@/lib/crypto";
-import { parseAmount } from "@/lib/money";
+import { parseAmount, parseMoney } from "@/lib/money";
 
 const MAX = 1_000_000_000_000;
 
@@ -27,12 +27,14 @@ const wish = z.object({
   target: z.number().int().positive().max(MAX).nullable(),
 });
 
+// Prices are kept in the wish's own currency (USD in cents); nothing is converted.
 export async function createWish(_prev, formData) {
+  const currency = formData.get("currency") === "USD" ? "USD" : "COP";
   const parsed = wish.safeParse({
     title: formData.get("title") ?? "",
     platform: formData.get("platform"),
-    current: parseAmount(formData.get("current")) ?? 0,
-    target: parseAmount(formData.get("target")),
+    current: parseMoney(formData.get("current"), currency) ?? 0,
+    target: parseMoney(formData.get("target"), currency),
   });
   if (!parsed.success) return { error: parsed.error.issues[0].message };
   const { title, platform, current, target } = parsed.data;
@@ -40,6 +42,7 @@ export async function createWish(_prev, formData) {
   const { error } = await supabase.from("wishlist").insert({
     title,
     platform,
+    currency,
     current_price_enc: encrypt(current),
     target_price_enc: target ? encrypt(target) : null,
   });

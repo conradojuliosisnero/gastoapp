@@ -7,6 +7,7 @@ import { toast } from "@/lib/toast";
 import Spinner from "@/app/spinner";
 import { formatCOP } from "@/lib/money";
 import { useConfirm } from "@/app/confirm";
+import { collapse, restore } from "@/lib/motion";
 import { deleteExtraIncome, revealSalary } from "./actions";
 
 gsap.registerPlugin(useGSAP);
@@ -100,9 +101,11 @@ export function ExtraList({ items }) {
     const label = item.description || "Ingreso extra";
     if (!(await confirm({ title: "¿Borrar este ingreso?", message: `${label} · ${formatCOP(item.amount)}`, confirmLabel: "Borrar", destructive: true }))) return;
     setPendingId(item.id);
+    const row = document.getElementById(`extra-${item.id}`);
     startTransition(async () => {
-      const result = await deleteExtraIncome(item.id);
+      const [result] = await Promise.all([deleteExtraIncome(item.id), collapse(row)]);
       setPendingId(null);
+      if (result.error) restore(row);
       result.error ? toast(result.error, "error") : toast("Ingreso borrado");
     });
   }
@@ -113,7 +116,7 @@ export function ExtraList({ items }) {
       <h2 id="extras" className="px-1 text-[13px] font-semibold uppercase tracking-wide text-muted">Ingresos extra del mes</h2>
       <ul className="overflow-hidden rounded-2xl bg-card">
         {items.map((item) => (
-          <li key={item.id} className={`flex items-center gap-3 border-t border-line py-3 pr-2 pl-4 first:border-t-0 ${pendingId === item.id ? "opacity-40" : ""}`}>
+          <li key={item.id} id={`extra-${item.id}`} className={`flex items-center gap-3 border-t border-line py-3 pr-2 pl-4 first:border-t-0 ${pendingId === item.id ? "opacity-40" : ""}`}>
             <span className="flex min-w-0 flex-1 flex-col gap-0.5">
               <span className="truncate text-base font-medium">{item.description || "Ingreso extra"}</span>
               <span className="text-[13px] text-muted">{dayMonth.format(new Date(`${item.date}T00:00:00Z`))}</span>

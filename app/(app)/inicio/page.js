@@ -8,6 +8,8 @@ import { isUpcoming } from "@/lib/gastos";
 import InstallCard from "@/app/install-card";
 import { ExtraList, SalaryValue, SavingsBars } from "./savings-widgets";
 import ModulesSummary from "./modules-summary";
+import CountUp from "@/app/count-up";
+import Progress from "@/app/progress";
 
 export const metadata = { title: "Inicio" };
 
@@ -70,10 +72,10 @@ export default async function InicioPage() {
   const spentPct = available ? Math.min(100, Math.round((current.spent / available) * 100)) : 0;
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-5 lg:grid lg:grid-cols-2 lg:items-start lg:gap-6">
       <h1 className="sr-only">Resumen</h1>
 
-      <InstallCard />
+      <div className="empty:hidden lg:col-span-2"><InstallCard /></div>
 
       {!current ? (
         <section className="flex flex-col gap-3 rounded-[22px] bg-card p-5">
@@ -85,6 +87,7 @@ export default async function InicioPage() {
         </section>
       ) : (
         <>
+          <div className="flex min-w-0 flex-col gap-5">
           <section aria-labelledby="mes-actual" className="flex flex-col gap-3 rounded-[22px] bg-card p-5">
             <div className="flex items-center justify-between">
               <h2 id="mes-actual" className="text-[15px] text-muted">{month.label}</h2>
@@ -103,18 +106,16 @@ export default async function InicioPage() {
                   <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
                 </Link>
               </span>
-              <span className="font-semibold tabular-nums text-ok">+{formatCOP(current.extra)}</span>
+              <CountUp value={current.extra} prefix="+" className="font-semibold tabular-nums text-ok" />
             </div>
             <div className="flex items-center justify-between text-base">
               <span>Gastado</span>
-              <span className="font-semibold tabular-nums">{formatCOP(current.spent)}</span>
+              <CountUp value={current.spent} className="font-semibold tabular-nums" />
             </div>
-            <div className="h-2 overflow-hidden rounded-full bg-line">
-              <div className={`h-2 rounded-full ${current.saved < 0 ? "bg-warn" : "bg-accent"}`} style={{ width: `${spentPct}%` }} />
-            </div>
+            <Progress pct={spentPct} className={current.saved < 0 ? "bg-warn" : "bg-accent"} />
             <div className="flex items-baseline justify-between border-t border-line pt-3">
               <span className="text-base font-semibold">Ahorro del mes</span>
-              <span className={`text-2xl font-bold tabular-nums ${current.saved < 0 ? "text-warn" : "text-ok"}`}>{formatCOP(current.saved)}</span>
+              <CountUp value={current.saved} className={`text-2xl font-bold tabular-nums ${current.saved < 0 ? "text-warn" : "text-ok"}`} />
             </div>
             {upcoming > 0 && (
               <p className="flex items-center justify-between gap-3 text-[13px] text-muted">
@@ -127,23 +128,28 @@ export default async function InicioPage() {
           </section>
 
           {monthExtras.length > 0 && <ExtraList items={monthExtras} />}
+          </div>
 
+        </>
+      )}
+
+      <div className="flex min-w-0 flex-col gap-5">
+      {current && (
           <section aria-labelledby="acumulado" className="flex flex-col gap-4 rounded-[22px] bg-card p-5">
             <div className="flex flex-col gap-0.5">
               <h2 id="acumulado" className="text-[15px] text-muted">Ahorro acumulado</h2>
-              <span className={`text-[36px] font-bold tracking-tight tabular-nums ${savings.total < 0 ? "text-warn" : ""}`}>{formatCOP(savings.total)}</span>
+              <CountUp value={savings.total} className={`text-[36px] font-bold tracking-tight tabular-nums ${savings.total < 0 ? "text-warn" : ""}`} />
               <span className="text-[13px] text-muted">Desde {monthRange(savings.months[0].period).label.toLowerCase()} · incluye lo que llevas de este mes</span>
             </div>
             <SavingsBars
               months={savings.months.slice(-6).map((m) => ({ period: m.period, saved: m.saved, label: shortMonth(m.period), text: formatCOP(m.saved) }))}
             />
           </section>
-        </>
       )}
-
       <Suspense fallback={<div aria-hidden="true" className="h-[188px] animate-pulse rounded-2xl bg-card" />}>
         <ModulesSummary supabase={supabase} />
       </Suspense>
+      </div>
     </div>
   );
 }

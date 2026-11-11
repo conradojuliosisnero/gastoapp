@@ -19,7 +19,10 @@ page.on("dialog", (d) => errors.push(`diálogo nativo inesperado: ${d.message()}
 const v = (locator) => locator.filter({ visible: true });
 const text = (t, opts) => v(page.getByText(t, opts));
 const role = (r, opts) => v(page.getByRole(r, opts));
-const tab = (name) => page.getByRole("navigation", { name: "Navegación principal" }).getByRole("link", { name, exact: true });
+const tab = (name) => v(page.getByRole("navigation", { name: "Navegación principal" })).getByRole("link", { name, exact: true });
+const amountField = () => v(page.locator('input[name="amount"]'));
+// Big figures count up with GSAP; wait for them to settle before reading text.
+const settle = () => page.waitForTimeout(1200);
 const toastSays = (t) => page.getByRole("status").getByText(t).waitFor();
 // Confirms through the app's own modal (never the browser's confirm()).
 async function confirmModal(button) {
@@ -67,12 +70,12 @@ await step("pantalla Gastos con categorías por defecto", async () => {
 await step("crear gasto fijo desde el botón +", async () => {
   await role("link", { name: "Agregar gasto" }).click();
   await role("heading", { name: "Nuevo gasto" }).waitFor();
-  const amount = v(page.getByPlaceholder("$0"));
+  const amount = amountField();
   await amount.fill("45000");
-  assert.equal(await amount.inputValue(), "$45.000");
+  assert.equal(await amount.inputValue(), "45.000");
   await text("Comida", { exact: true }).click();
   await v(page.getByPlaceholder("Ej. Mercado")).fill(unique);
-  await text("Gasto fijo (se repite cada mes)").click();
+  await text("Gasto fijo", { exact: true }).click();
   await role("button", { name: "Guardar gasto" }).click();
   await toastSays("Gasto guardado");
   await page.waitForURL(/\/gastos\?mes=/);
@@ -81,14 +84,14 @@ await step("crear gasto fijo desde el botón +", async () => {
   // Reopening the form must start empty (Next keeps visited screens in memory).
   await role("link", { name: "Agregar gasto" }).click();
   await role("heading", { name: "Nuevo gasto" }).waitFor();
-  assert.equal(await v(page.getByPlaceholder("$0")).inputValue(), "", "el formulario debe abrir vacío");
+  assert.equal(await amountField().inputValue(), "", "el formulario debe abrir vacío");
   await role("link", { name: "Cancelar" }).click();
   await role("heading", { name: "Movimientos" }).waitFor();
 });
 
 await step("validación: monto vacío muestra error", async () => {
   await page.goto(`${BASE_URL}/gastos/nuevo`);
-  const amount = v(page.getByPlaceholder("$0"));
+  const amount = amountField();
   await amount.evaluate((el) => el.removeAttribute("required"));
   await role("button", { name: "Guardar gasto" }).click();
   await text("Escribe el monto.").first().waitFor();
@@ -135,10 +138,10 @@ await step("copiar gastos fijos del mes anterior", async () => {
   const fixed = `${unique} fijo`;
 
   await page.goto(`${BASE_URL}/gastos/nuevo`);
-  await v(page.getByPlaceholder("$0")).fill("30000");
+  await amountField().fill("30000");
   await v(page.getByPlaceholder("Ej. Mercado")).fill(fixed);
   await v(page.locator('input[name="date"]')).fill(prev);
-  await text("Gasto fijo (se repite cada mes)").click();
+  await text("Gasto fijo", { exact: true }).click();
   await role("button", { name: "Guardar gasto" }).click();
   await page.waitForURL(new RegExp(`mes=${prev.slice(0, 7)}`));
   await text(fixed).waitFor();
@@ -164,7 +167,7 @@ await step("copiar gastos fijos del mes anterior", async () => {
 await step("ahorro: sueldo oculto, revelar y ahorro del mes", async () => {
   const spentLabel = `${unique} ahorro`;
   await page.goto(`${BASE_URL}/gastos/nuevo`);
-  await v(page.getByPlaceholder("$0")).fill("10000");
+  await amountField().fill("10000");
   await v(page.getByPlaceholder("Ej. Mercado")).fill(spentLabel);
   await role("button", { name: "Guardar gasto" }).click();
   await text(spentLabel).waitFor();
@@ -201,7 +204,7 @@ await step("pago futuro: etiqueta y no cuenta como gastado", async () => {
   const label = `${unique} futuro`;
 
   await page.goto(`${BASE_URL}/gastos/nuevo`);
-  await v(page.getByPlaceholder("$0")).fill("77000");
+  await amountField().fill("77000");
   await v(page.getByPlaceholder("Ej. Mercado")).fill(label);
   await v(page.locator('input[name="date"]')).fill(futureStr);
   await role("button", { name: "Guardar gasto" }).click();
@@ -210,6 +213,7 @@ await step("pago futuro: etiqueta y no cuenta como gastado", async () => {
   const row = v(page.getByRole("listitem").filter({ hasText: label }));
   await row.getByText("Pago futuro").waitFor();
   await text("Pagos futuros (1)").waitFor();
+  await settle();
   const summary = await v(page.locator("section").filter({ hasText: "Gastado en el mes" })).innerText();
   assert.match(summary, /Gastado en el mes\s+\$\s0\b/, "el pago futuro no debe sumar a lo gastado");
 
@@ -232,15 +236,17 @@ await step("pago futuro: etiqueta y no cuenta como gastado", async () => {
 await step("ingreso extra suma al ahorro y se puede borrar", async () => {
   const label = `${unique} venta`;
   await page.goto(`${BASE_URL}/inicio`);
+  await settle();
   const savedBefore = await v(page.locator("section").filter({ hasText: "Ahorro del mes" })).innerText();
   await role("link", { name: "Agregar ingreso extra" }).click();
   await role("heading", { name: "Ingreso extra" }).waitFor();
-  await v(page.getByPlaceholder("$0")).fill("200000");
+  await amountField().fill("200000");
   await v(page.getByPlaceholder(/Venta, regalo/)).fill(label);
   await role("button", { name: "Guardar ingreso" }).click();
   await toastSays("Ingreso extra guardado");
   await text(label).waitFor();
   await text(/\+\$\s200\.000/).first().waitFor();
+  await settle();
   const savedAfter = await v(page.locator("section").filter({ hasText: "Ahorro del mes" })).innerText();
   assert.notEqual(savedAfter, savedBefore, "el ahorro del mes debe cambiar");
   await role("button", { name: `Borrar ingreso ${label}` }).click();
@@ -253,7 +259,7 @@ await step("crear categoría propia desde Nuevo gasto y borrarla", async () => {
   const cat = `Mascotas ${unique.slice(-5)}`;
   const label = `${unique} mascota`;
   await page.goto(`${BASE_URL}/gastos/nuevo`);
-  await v(page.getByPlaceholder("$0")).fill("15000");
+  await amountField().fill("15000");
   await role("button", { name: "Nueva" }).click();
   await v(page.getByLabel("Nombre de la nueva categoría")).fill(cat);
   await role("button", { name: "Crear" }).click();
@@ -280,7 +286,7 @@ await step("internet: configurar plan entre 3 y marcar pagos", async () => {
   await role("link", { name: "Configurar plan" }).click();
   await role("heading", { name: "Plan de internet" }).waitFor();
   await v(page.getByRole("textbox", { name: "Nombre", exact: true })).fill("Internet e2e");
-  await v(page.getByPlaceholder("$0")).fill("120000");
+  await amountField().fill("120000");
   await v(page.getByLabel("Nombre del integrante 2")).fill("Cliente A");
   await v(page.getByLabel("Nombre del integrante 3")).fill("Cliente B");
   assert.equal(await v(page.getByText(/^\$\s40\.000$/)).count(), 3, "partes iguales de 40.000");
@@ -332,7 +338,7 @@ await step("videojuegos: límite, compra por plataforma y lista de deseos", asyn
 
   await role("link", { name: "Agregar compra de juego" }).click();
   await role("heading", { name: "Nueva compra" }).waitFor();
-  await v(page.getByPlaceholder("$0")).fill("89900");
+  await amountField().fill("89900");
   await text("DLC", { exact: true }).click();
   await v(page.getByPlaceholder("Ej. Expansión de historia")).fill(game);
   await role("radio", { name: "PC", exact: true }).click();
@@ -363,6 +369,41 @@ await step("videojuegos: límite, compra por plataforma y lista de deseos", asyn
   await confirmModal("Borrar");
   await toastSays("Compra borrada");
   await role("button", { name: `Quitar ${unique} deseo` }).click();
+  await confirmModal("Borrar");
+  await toastSays("Quitado de la lista");
+});
+
+await step("videojuegos en dólares: compra convertida a pesos y deseo en USD", async () => {
+  const game = `${unique} usd`;
+  await role("link", { name: "Agregar compra de juego" }).click();
+  await role("heading", { name: "Nueva compra" }).waitFor();
+  await role("radio", { name: "USD", exact: true }).click();
+  await amountField().fill("19,99");
+  assert.equal(await amountField().inputValue(), "19.99");
+  await text(/≈ \$\s[\d.]+ · 1 US\$ = \$\s[\d.]+/).waitFor();
+  await v(page.getByPlaceholder("Ej. Expansión de historia")).fill(game);
+  await role("button", { name: /Guardar compra · US\$\s19,99/ }).click();
+  await toastSays("Compra guardada");
+  const row = v(page.getByRole("listitem").filter({ hasText: game }));
+  await row.getByText(/−US\$\s19,99/).waitFor();
+  await row.getByText(/≈ \$\s[\d.]+/).waitFor();
+  await page.screenshot({ path: `${SHOTS}/juegos-usd.png`, fullPage: true });
+  await role("button", { name: `Borrar ${game}` }).click();
+  await confirmModal("Borrar");
+  await toastSays("Compra borrada");
+  await text(game).waitFor({ state: "detached" });
+
+  await role("link", { name: "Agregar a la lista de deseos" }).click();
+  await role("heading", { name: "Lista de deseos" }).waitFor();
+  await v(page.getByPlaceholder(/Juego de fútbol/)).fill(`${unique} deseo usd`);
+  await role("radio", { name: "USD", exact: true }).click();
+  await v(page.getByRole("textbox", { name: "Precio actual" })).fill("59.99");
+  await v(page.getByRole("textbox", { name: "Lo compro a" })).fill("39.99");
+  await role("button", { name: "Agregar a la lista" }).click();
+  await toastSays("Agregado a tu lista de deseos");
+  await text(/Comprar a US\$\s39,99/).waitFor();
+  await text(/^US\$\s59,99$/).waitFor();
+  await role("button", { name: `Quitar ${unique} deseo usd` }).click();
   await confirmModal("Borrar");
   await toastSays("Quitado de la lista");
 });

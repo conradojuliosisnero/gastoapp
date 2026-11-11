@@ -8,6 +8,7 @@ import { formatCOP, parseAmount } from "@/lib/money";
 import { toast } from "@/lib/toast";
 import { useConfirm } from "@/app/confirm";
 import { SaveBar, SheetHeader } from "../../sheet-header";
+import { Field, FormError, Plus, Section, Segmented, inputCls } from "@/app/form-kit";
 
 const group = new Intl.NumberFormat("es-CO");
 const money = (n) => (n == null ? "" : `$${group.format(n)}`);
@@ -53,18 +54,15 @@ export default function PlanForm({ plan }) {
   }
 
   return (
-    <form action={formAction} className="flex flex-col gap-5">
+    <form action={formAction} className="flex flex-col gap-6">
       {dialog}
       <SheetHeader title={plan ? "Editar plan" : "Plan de internet"} cancelHref="/internet" />
 
-      <div className="overflow-hidden rounded-2xl bg-card">
-        <label className="flex min-h-12 items-center gap-3 px-4">
-          <span className="w-28 shrink-0 text-base">Nombre</span>
-          <input name="name" required maxLength={60} defaultValue={plan?.name ?? "Internet casa"} className="min-w-0 flex-1 bg-transparent text-base outline-none" />
-        </label>
-        <div className="ml-4 h-px bg-line" />
-        <label className="flex min-h-12 items-center gap-3 px-4">
-          <span className="w-28 shrink-0 text-base">Valor mensual</span>
+      <Section title="Plan">
+        <Field label="Nombre">
+          <input name="name" required maxLength={60} defaultValue={plan?.name ?? "Internet casa"} className={`${inputCls} text-right`} />
+        </Field>
+        <Field label="Valor mensual">
           <input
             name="amount"
             inputMode="numeric"
@@ -72,46 +70,25 @@ export default function PlanForm({ plan }) {
             placeholder="$0"
             value={money(amount)}
             onChange={(e) => setAmount(parseAmount(e.target.value))}
-            className="min-w-0 flex-1 bg-transparent text-base font-semibold outline-none placeholder:text-muted"
+            className={`${inputCls} text-right font-semibold tabular-nums`}
           />
-        </label>
-        <div className="ml-4 h-px bg-line" />
-        <label className="flex min-h-12 items-center gap-3 px-4">
-          <span className="w-28 shrink-0 text-base">Día de pago</span>
-          <input name="dueDay" type="number" inputMode="numeric" required min={1} max={31} defaultValue={plan?.dueDay ?? 15} className="w-20 bg-transparent text-base outline-none" />
-          <span className="text-[13px] text-muted">de cada mes</span>
-        </label>
-      </div>
+        </Field>
+        <Field label="Día de pago" hint="de cada mes">
+          <input name="dueDay" type="number" inputMode="numeric" required min={1} max={31} defaultValue={plan?.dueDay ?? 15} className={`${inputCls} max-w-16 text-right font-semibold tabular-nums`} />
+        </Field>
+      </Section>
 
-      <div className="flex flex-col gap-2">
-        <span className="px-1 text-[13px] font-semibold uppercase tracking-wide text-muted">Cómo se divide</span>
-        <input type="hidden" name="splitMode" value={splitMode} />
-        <div role="radiogroup" aria-label="Cómo se divide" className="grid grid-cols-2 gap-0.5 rounded-[12px] bg-segment p-0.5">
-          {[
-            ["equal", "Partes iguales"],
-            ["custom", "Personalizado"],
-          ].map(([id, label]) => (
-            <button
-              key={id}
-              type="button"
-              role="radio"
-              aria-checked={splitMode === id}
-              onClick={() => setSplitMode(id)}
-              className="min-h-10 rounded-[10px] text-sm font-semibold transition active:scale-95 aria-checked:bg-card aria-checked:shadow-sm"
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      </div>
+      <Section title="Cómo se divide" className="p-2">
+        <Segmented label="Cómo se divide" name="splitMode" options={[["equal", "Partes iguales"], ["custom", "Personalizado"]]} value={splitMode} onChange={setSplitMode} full />
+      </Section>
 
-      <div className="flex flex-col gap-2">
-        <span className="px-1 text-[13px] font-semibold uppercase tracking-wide text-muted">Integrantes</span>
+      <div className="flex flex-col gap-1.5">
+        <h2 className="px-4 text-[13px] font-semibold uppercase tracking-wide text-muted">Integrantes</h2>
         <input type="hidden" name="memberCount" value={members.length} />
         <input type="hidden" name="removed" value={removedIds.join(",")} />
-        <ul className="overflow-hidden rounded-2xl bg-card">
+        <ul className="overflow-hidden rounded-2xl bg-card ring-1 ring-line/70">
           {members.map((m, i) => (
-            <li key={m.key} className="flex min-h-12 items-center gap-2 border-t border-line pr-1 pl-4 first:border-t-0">
+            <li key={m.key} className="flex min-h-[52px] items-center gap-2 border-t border-line pr-1 pl-4 transition-colors first:border-t-0 focus-within:bg-fill/60">
               <input type="hidden" name={`member:${i}:id`} value={m.id ?? ""} />
               <input
                 name={`member:${i}:name`}
@@ -157,22 +134,22 @@ export default function PlanForm({ plan }) {
           <button
             type="button"
             onClick={() => setMembers((list) => [...list, blank()])}
-            className="flex min-h-11 items-center justify-center gap-1.5 rounded-2xl border border-dashed border-accent text-[15px] font-semibold text-accent transition active:scale-[0.99]"
+            className="flex min-h-11 items-center justify-center gap-1.5 rounded-2xl border border-dashed border-accent/70 text-[15px] font-semibold text-accent transition active:scale-[0.99]"
           >
-            <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
+            <Plus />
             Agregar persona
           </button>
         )}
         {splitMode === "custom" && amount != null && (
-          <p className={`px-1 text-[13px] ${customTotal === amount ? "text-ok" : "text-warn"}`}>
+          <p className={`px-4 text-[13px] font-medium ${customTotal === amount ? "text-ok" : "text-warn"}`}>
             Suman {formatCOP(customTotal)} de {formatCOP(amount)}
             {customTotal !== amount && ` · faltan ${formatCOP(amount - customTotal)}`}
           </p>
         )}
       </div>
 
-      <p className="px-1 text-[13px] text-muted">Los nombres y montos se guardan cifrados. Cuando marques tu parte como pagada, también se suma a tus gastos (Servicios).</p>
-      <p aria-live="polite" className="min-h-5 px-1 text-sm text-danger">{state?.error}</p>
+      <p className="px-4 text-[13px] text-muted">Los nombres y montos se guardan cifrados. Cuando marques tu parte como pagada, también se suma a tus gastos (Servicios).</p>
+      <FormError error={state?.error} />
       <SaveBar pending={pending} label="Guardar plan" />
     </form>
   );

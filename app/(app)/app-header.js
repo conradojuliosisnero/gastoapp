@@ -2,7 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getAlerts } from "@/lib/alerts";
 
-const shell = "sticky top-0 z-30 -mx-4 mb-4 flex items-center justify-between border-b border-transparent bg-bg/80 px-4 pt-[max(12px,env(safe-area-inset-top))] pb-3 backdrop-blur-xl backdrop-saturate-[1.8]";
+const shell = "sticky top-0 z-30 -mx-4 mb-4 flex items-center justify-between lg:-mx-10 lg:mb-6 lg:flex-row-reverse lg:justify-start lg:gap-3 lg:px-10 lg:pt-5 border-b border-transparent bg-bg/80 px-4 pt-[max(12px,env(safe-area-inset-top))] pb-3 lg:pt-5 backdrop-blur-xl backdrop-saturate-[1.8]";
 
 const Bell = () => (
   <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

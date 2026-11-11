@@ -4,6 +4,8 @@ import { dueDate } from "@/lib/internet";
 import { formatCOP, monthRange, today } from "@/lib/money";
 import { getPlan } from "./data";
 import Members from "./members";
+import CountUp from "@/app/count-up";
+import Progress from "@/app/progress";
 
 export const metadata = { title: "Internet" };
 
@@ -60,9 +62,9 @@ export default async function InternetPage({ searchParams }) {
   const pct = Math.round((collected / plan.amount) * 100);
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-5 lg:grid lg:grid-cols-2 lg:items-start lg:gap-6">
       <h1 className="sr-only">Internet compartido</h1>
-      <nav aria-label="Mes" className="flex items-center justify-between px-1">
+      <nav aria-label="Mes" className="flex items-center justify-between px-1 lg:col-span-2">
         <Link href={`/internet?mes=${month.prev}`} aria-label="Mes anterior" className="flex size-11 items-center justify-center rounded-full text-accent transition active:scale-90 active:bg-accent/10">
           <Chevron d="m15 6-6 6 6 6" />
         </Link>
@@ -72,11 +74,12 @@ export default async function InternetPage({ searchParams }) {
         </Link>
       </nav>
 
+      <div className="flex min-w-0 flex-col gap-5">
       <section className="flex flex-col gap-4 rounded-[22px] bg-card p-5">
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 flex-col gap-0.5">
             <span className="truncate text-[15px] text-muted">{plan.name}</span>
-            <span className="text-[36px] font-bold tracking-tight tabular-nums">{formatCOP(plan.amount)}</span>
+            <CountUp value={plan.amount} className="text-[36px] font-bold tracking-tight tabular-nums" />
           </div>
           <span className={`shrink-0 rounded-full px-2.5 py-1 text-[13px] font-semibold ${overdue ? "bg-warn/15 text-warn" : "bg-accent/12 text-accent"}`}>
             {overdue ? "Venció" : "Vence"} {dayMonth.format(new Date(`${due}T00:00:00Z`))}
@@ -89,9 +92,7 @@ export default async function InternetPage({ searchParams }) {
               {paidThisMonth.size} de {plan.members.length} pagaron
             </span>
           </div>
-          <div className="h-2 overflow-hidden rounded-full bg-line">
-            <div className="h-2 rounded-full bg-ok" style={{ width: `${pct}%` }} />
-          </div>
+          <Progress pct={pct} className="bg-ok" />
         </div>
         <div className="flex items-center justify-between text-[13px] text-muted">
           <span>{plan.splitMode === "equal" ? "Partes iguales" : "Partes personalizadas"}</span>
@@ -103,9 +104,11 @@ export default async function InternetPage({ searchParams }) {
 
       <Members period={month.key} members={plan.members.map((m) => ({ ...m, paid: paidThisMonth.has(m.id) }))} />
 
+      </div>
+
       <section aria-labelledby="historial" className="flex flex-col gap-2">
         <h2 id="historial" className="px-1 text-[13px] font-semibold uppercase tracking-wide text-muted">Historial</h2>
-        <ul className="overflow-hidden rounded-2xl bg-card">
+        <ul data-stagger className="overflow-hidden rounded-2xl bg-card">
           {history.slice(1).map((h) => {
             const count = payments.filter((p) => p.period === h.key).length;
             const complete = count === plan.members.length;

@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { useState, useTransition } from "react";
-import { formatCOP } from "@/lib/money";
+import { formatCOP, formatMoney } from "@/lib/money";
 import { toast } from "@/lib/toast";
 import { useConfirm } from "@/app/confirm";
 import Spinner from "@/app/spinner";
+import { collapse, restore } from "@/lib/motion";
 import { deleteTransaction } from "@/app/(app)/gastos/actions";
 import { deleteWish } from "./actions";
 
@@ -25,9 +26,11 @@ function useRemove(action, { title, done }) {
   async function remove(id, message) {
     if (!(await confirm({ title, message, confirmLabel: "Borrar", destructive: true }))) return;
     setBusyId(id);
+    const row = document.getElementById(`row-${id}`);
     startTransition(async () => {
-      const result = await action(id);
+      const [result] = await Promise.all([action(id), collapse(row)]);
       setBusyId(null);
+      if (result.error) restore(row);
       result.error ? toast(result.error, "error") : toast(done);
     });
   }
@@ -64,17 +67,18 @@ export function Purchases({ items }) {
           {items.length === 0 ? "Sin compras este mes. Toca + para registrar una." : "No hay compras en esta plataforma."}
         </p>
       ) : (
-        <ul className="overflow-hidden rounded-2xl bg-card">
+        <ul data-stagger className="overflow-hidden rounded-2xl bg-card">
           {visible.map((t) => (
-            <li key={t.id} className={`flex items-center gap-3 border-t border-line py-3 pr-2 pl-4 first:border-t-0 ${busyId === t.id ? "opacity-40" : ""}`}>
+            <li key={t.id} id={`row-${t.id}`} className={`flex items-center gap-3 border-t border-line py-3 pr-2 pl-4 first:border-t-0 ${busyId === t.id ? "opacity-40" : ""}`}>
               <span className="flex min-w-0 flex-1 flex-col gap-0.5">
                 <span className="truncate text-base font-medium">{t.title || t.type}</span>
                 <span className="text-[13px] text-muted">
                   {t.type} · {shortDate.format(new Date(`${t.date}T00:00:00Z`))}
+                  {t.usd != null && ` · ≈ ${formatCOP(t.amount)}`}
                 </span>
               </span>
               <span className="flex flex-col items-end gap-0.5">
-                <span className={`text-base font-semibold tabular-nums ${t.upcoming ? "text-muted" : ""}`}>−{formatCOP(t.amount)}</span>
+                <span className={`text-base font-semibold tabular-nums ${t.upcoming ? "text-muted" : ""}`}>−{t.usd != null ? formatMoney(t.usd, "USD") : formatCOP(t.amount)}</span>
                 <span className="flex gap-1">
                   {t.upcoming && <span className="rounded-full bg-accent/12 px-2 py-0.5 text-[11px] font-semibold text-accent">Pago futuro</span>}
                   <span className="rounded-full bg-fill px-2 py-0.5 text-[11px] font-semibold text-ink-2">{t.platform}</span>
@@ -112,18 +116,18 @@ export function Wishlist({ items }) {
       {items.length === 0 ? (
         <p className="rounded-2xl bg-card px-4 py-6 text-center text-[15px] text-muted">Guarda juegos que quieres y el precio al que los comprarías.</p>
       ) : (
-        <ul className="overflow-hidden rounded-2xl bg-card">
+        <ul data-stagger className="overflow-hidden rounded-2xl bg-card">
           {items.map((w) => {
             const reached = w.target != null && w.current <= w.target;
             return (
-              <li key={w.id} className={`flex items-center gap-3 border-t border-line py-3 pr-2 pl-4 first:border-t-0 ${busyId === w.id ? "opacity-40" : ""}`}>
+              <li key={w.id} id={`row-${w.id}`} className={`flex items-center gap-3 border-t border-line py-3 pr-2 pl-4 first:border-t-0 ${busyId === w.id ? "opacity-40" : ""}`}>
                 <span className="flex min-w-0 flex-1 flex-col gap-0.5">
                   <span className="truncate text-base font-medium">{w.title}</span>
                   <span className={`text-[13px] ${reached ? "font-semibold text-ok" : "text-muted"}`}>
-                    {w.platform} · {w.target == null ? "Sin precio objetivo" : reached ? "¡Llegó a tu precio!" : `Comprar a ${formatCOP(w.target)}`}
+                    {w.platform} · {w.target == null ? "Sin precio objetivo" : reached ? "¡Llegó a tu precio!" : `Comprar a ${formatMoney(w.target, w.currency)}`}
                   </span>
                 </span>
-                <span className="text-base font-semibold tabular-nums">{formatCOP(w.current)}</span>
+                <span className="text-base font-semibold tabular-nums">{formatMoney(w.current, w.currency)}</span>
                 <button
                   type="button"
                   onClick={() => remove(w.id, w.title)}

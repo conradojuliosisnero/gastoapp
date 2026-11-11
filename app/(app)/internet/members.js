@@ -5,6 +5,7 @@ import { formatCOP } from "@/lib/money";
 import { toast } from "@/lib/toast";
 import { useConfirm } from "@/app/confirm";
 import { togglePayment } from "./actions";
+import { pop } from "@/lib/motion";
 
 const initials = (name) =>
   name
@@ -19,7 +20,7 @@ export default function Members({ period, members }) {
   const [, startTransition] = useTransition();
   const [confirm, dialog] = useConfirm();
 
-  async function toggle(m) {
+  async function toggle(m, button) {
     if (m.paid) {
       const ok = await confirm({
         title: `¿Desmarcar el pago de ${m.isMe ? "tu parte" : m.name}?`,
@@ -29,6 +30,7 @@ export default function Members({ period, members }) {
       });
       if (!ok) return;
     }
+    pop(button);
     startTransition(async () => {
       setOptimistic(m.id);
       const result = await togglePayment(m.id, period);
@@ -42,7 +44,7 @@ export default function Members({ period, members }) {
     <section aria-labelledby="integrantes" className="flex flex-col gap-2">
       {dialog}
       <h2 id="integrantes" className="px-1 text-[13px] font-semibold uppercase tracking-wide text-muted">Quién pagó</h2>
-      <ul className="overflow-hidden rounded-2xl bg-card">
+      <ul data-stagger className="overflow-hidden rounded-2xl bg-card">
         {optimistic.map((m) => (
           <li key={m.id} className="flex items-center gap-3 border-t border-line px-4 py-3 first:border-t-0">
             <span aria-hidden="true" className={`flex size-10 shrink-0 items-center justify-center rounded-full text-[15px] font-semibold ${m.isMe ? "bg-primary text-white" : "bg-fill text-ink-2"}`}>
@@ -58,7 +60,7 @@ export default function Members({ period, members }) {
               type="button"
               aria-pressed={m.paid}
               aria-label={`${m.paid ? "Desmarcar" : "Marcar"} pago de ${m.isMe ? "tu parte" : m.name}`}
-              onClick={() => toggle(m)}
+              onClick={(e) => toggle(m, e.currentTarget)}
               className={`flex min-h-9 min-w-[104px] items-center justify-center gap-1 rounded-full px-3 text-[14px] font-semibold transition active:scale-95 ${
                 m.paid ? "bg-ok/15 text-ok" : "bg-primary text-white"
               }`}

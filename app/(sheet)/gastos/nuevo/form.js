@@ -3,23 +3,24 @@
 import { useActionState, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createCategory, createTransaction } from "@/app/(app)/gastos/actions";
-import { parseAmount } from "@/lib/money";
+import { formatCOP, formatMoney, parseMoney, usdToCop } from "@/lib/money";
 import { toast } from "@/lib/toast";
 import Spinner from "@/app/spinner";
 import { SaveBar, SheetHeader } from "../../sheet-header";
-
-const group = new Intl.NumberFormat("es-CO");
+import { AmountHero, ChoiceChips, Field, FormError, Plus, Section, Segmented, SwitchField, dateCls, inputCls } from "@/app/form-kit";
 
 const COPY = {
-  gastos: { title: "Nuevo gasto", back: "/gastos", hint: "Ej. Mercado", save: "Guardar gasto", saved: "Gasto guardado", newCat: "Ej. Mascotas", legend: "Categoría" },
-  juegos: { title: "Nueva compra", back: "/juegos", hint: "Ej. Expansión de historia", save: "Guardar compra", saved: "Compra guardada", newCat: "Ej. Pase de batalla", legend: "Tipo" },
+  gastos: { title: "Nuevo gasto", back: "/gastos", hint: "Ej. Mercado", save: "Guardar gasto", saved: "Gasto guardado", newCat: "Ej. Mascotas", legend: "Categoría", what: "Descripción" },
+  juegos: { title: "Nueva compra", back: "/juegos", hint: "Ej. Expansión de historia", save: "Guardar compra", saved: "Compra guardada", newCat: "Ej. Pase de batalla", legend: "Tipo", what: "Juego" },
 };
 
-export default function NewExpenseForm({ categories: initialCategories, defaultDate, module = "gastos" }) {
+export default function NewExpenseForm({ categories: initialCategories, defaultDate, module = "gastos", usdRate = null }) {
   const copy = COPY[module];
-  const [platform, setPlatform] = useState("PS5");
   const router = useRouter();
   const [amount, setAmount] = useState("");
+  const [currency, setCurrency] = useState("COP");
+  const [platform, setPlatform] = useState("PS5");
+  const [date, setDate] = useState(defaultDate);
   const [categories, setCategories] = useState(initialCategories);
   const [selected, setSelected] = useState(initialCategories[0]?.id ?? "");
   const [adding, setAdding] = useState(false);
@@ -37,6 +38,7 @@ export default function NewExpenseForm({ categories: initialCategories, defaultD
       toast(`Categoría "${result.category.name}" creada`);
     });
   }
+
   const [state, formAction, pending] = useActionState(async (prev, formData) => {
     const result = await createTransaction(prev, formData);
     if (result.ok) {
@@ -49,53 +51,54 @@ export default function NewExpenseForm({ categories: initialCategories, defaultD
     return result;
   }, null);
 
+  const cents = currency === "USD" ? parseMoney(amount, "USD") : null;
+  const usdHint =
+    currency !== "USD"
+      ? null
+      : !usdRate
+        ? "No pudimos traer la tasa del dólar ahora. Intenta en un rato o registra en COP."
+        : cents
+          ? `≈ ${formatCOP(usdToCop(cents, usdRate))} · 1 US$ = ${formatCOP(Math.round(usdRate))}`
+          : `Tasa de hoy: 1 US$ = ${formatCOP(Math.round(usdRate))}`;
+
   return (
-    <form action={formAction} className="flex flex-col gap-5">
+    <form action={formAction} className="flex flex-col gap-6">
       <SheetHeader title={copy.title} cancelHref={copy.back} />
       <input type="hidden" name="module" value={module} />
 
-      <label className="flex flex-col items-center gap-1 py-3">
-        <span className="text-[13px] font-semibold uppercase tracking-wide text-muted">Monto (COP)</span>
-        <input
-          name="amount"
-          inputMode="numeric"
-          autoComplete="off"
-          required
-          autoFocus
-          placeholder="$0"
-          value={amount}
-          onChange={(e) => {
-            const n = parseAmount(e.target.value);
-            setAmount(n == null ? "" : `$${group.format(n)}`);
-          }}
-          className="w-full bg-transparent text-center text-[52px] font-bold tracking-tight outline-none"
-        />
-      </label>
+      <AmountHero
+        label="Monto"
+        value={amount}
+        onValue={setAmount}
+        currency={currency}
+        currencies={module === "juegos" ? ["COP", "USD"] : null}
+        onCurrency={(c) => {
+          setCurrency(c);
+          setAmount("");
+        }}
+        hint={usdHint}
+        required
+        autoFocus
+      />
 
-      <fieldset className="flex min-w-0 flex-col gap-2">
-        <legend className="mb-2 px-1 text-[13px] font-semibold uppercase tracking-wide text-muted">{copy.legend}</legend>
-        <div className="flex flex-wrap gap-2">
-          {categories.map((c) => (
-            <label key={c.id} className="cursor-pointer">
-              <input type="radio" name="categoryId" value={c.id} checked={selected === c.id} onChange={() => setSelected(c.id)} className="peer sr-only" />
-              <span className="flex min-h-9 items-center rounded-full border border-line bg-card px-3.5 text-sm font-semibold transition active:scale-95 peer-checked:border-primary peer-checked:bg-primary peer-checked:text-white peer-focus-visible:ring-2 peer-focus-visible:ring-accent">
-                {c.name}
-              </span>
-            </label>
-          ))}
+      <Section
+        title={copy.legend}
+        footer={adding ? null : `Toca una ${copy.legend.toLowerCase()} o crea una nueva.`}
+      >
+        <ChoiceChips name="categoryId" label={copy.legend} options={categories} value={selected} onChange={setSelected}>
           {!adding && (
             <button
               type="button"
               onClick={() => setAdding(true)}
-              className="flex min-h-9 items-center gap-1 rounded-full border border-dashed border-accent px-3.5 text-sm font-semibold text-accent transition active:scale-95"
+              className="flex min-h-9 items-center gap-1 rounded-full border border-dashed border-accent/70 px-3.5 text-sm font-semibold text-accent transition active:scale-95"
             >
-              <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
+              <Plus />
               Nueva
             </button>
           )}
-        </div>
+        </ChoiceChips>
         {adding && (
-          <div className="mt-1 flex items-center gap-2 rounded-2xl bg-card p-2 pl-4">
+          <div className="flex items-center gap-2 py-2 pr-2 pl-4">
             <input
               aria-label="Nombre de la nueva categoría"
               autoFocus
@@ -109,7 +112,7 @@ export default function NewExpenseForm({ categories: initialCategories, defaultD
                   addCategory();
                 }
               }}
-              className="min-w-0 flex-1 bg-transparent text-base outline-none"
+              className={inputCls}
             />
             <button type="button" onClick={() => setAdding(false)} className="min-h-9 px-2 text-[15px] text-muted">
               Cancelar
@@ -125,51 +128,29 @@ export default function NewExpenseForm({ categories: initialCategories, defaultD
             </button>
           </div>
         )}
-      </fieldset>
+      </Section>
 
-      <div className="overflow-hidden rounded-2xl bg-card">
-        <label className="flex min-h-12 items-center gap-3 px-4">
-          <span className="w-28 shrink-0 text-base">{module === "juegos" ? "Juego" : "Descripción"}</span>
-          <input name="description" maxLength={80} placeholder={copy.hint} className="min-w-0 flex-1 bg-transparent text-base outline-none" />
-        </label>
-        <div className="ml-4 h-px bg-line" />
-        <label className="flex min-h-12 items-center justify-between gap-3 px-4">
-          <span className="text-base">Fecha</span>
-          <input name="date" type="date" required defaultValue={defaultDate} className="rounded-lg bg-field px-2.5 py-1.5 text-[15px] font-medium text-accent outline-none" />
-        </label>
-        <div className="ml-4 h-px bg-line" />
+      <Section
+        title="Detalles"
+        footer={date > defaultDate ? "Fecha futura: quedará como “Pago futuro” y no se descuenta hasta ese día." : null}
+      >
+        <Field label={copy.what}>
+          <input name="description" maxLength={80} placeholder={copy.hint} className={`${inputCls} text-right`} />
+        </Field>
+        <Field label="Fecha">
+          <input name="date" type="date" required value={date} onChange={(e) => setDate(e.target.value)} className={dateCls} />
+        </Field>
         {module === "juegos" ? (
-          <div className="flex min-h-12 items-center justify-between gap-3 px-4">
-            <span id="platform-label" className="text-base">Plataforma</span>
-            <input type="hidden" name="platform" value={platform} />
-            <div role="radiogroup" aria-labelledby="platform-label" className="grid grid-cols-3 gap-0.5 rounded-[10px] bg-segment p-0.5">
-              {["PS5", "PC", "Otra"].map((p) => (
-                <button
-                  key={p}
-                  type="button"
-                  role="radio"
-                  aria-checked={platform === p}
-                  onClick={() => setPlatform(p)}
-                  className="min-h-8 rounded-lg px-3 text-[13px] font-semibold transition active:scale-95 aria-checked:bg-card aria-checked:shadow-sm"
-                >
-                  {p}
-                </button>
-              ))}
-            </div>
-          </div>
+          <Field label="Plataforma" as="div">
+            <Segmented label="Plataforma" name="platform" options={["PS5", "PC", "Otra"]} value={platform} onChange={setPlatform} />
+          </Field>
         ) : (
-          <label className="flex min-h-12 cursor-pointer items-center justify-between gap-3 px-4">
-            <span className="text-base">Gasto fijo (se repite cada mes)</span>
-            <input name="fijo" type="checkbox" role="switch" className="peer sr-only" />
-            <span aria-hidden="true" className="flex h-[31px] w-[51px] shrink-0 items-center rounded-full bg-switch p-0.5 transition-colors peer-checked:bg-ok peer-checked:*:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-accent">
-              <span className="size-[27px] rounded-full bg-white shadow transition-transform" />
-            </span>
-          </label>
+          <SwitchField name="fijo" label="Gasto fijo" hint="Se repite cada mes" />
         )}
-      </div>
+      </Section>
 
-      <p aria-live="polite" className="min-h-5 px-1 text-sm text-danger">{state?.error}</p>
-      <SaveBar pending={pending} label={copy.save} />
+      <FormError error={state?.error} />
+      <SaveBar pending={pending} label={cents && usdRate ? `${copy.save} · ${formatMoney(cents, "USD")}` : copy.save} />
     </form>
   );
 }

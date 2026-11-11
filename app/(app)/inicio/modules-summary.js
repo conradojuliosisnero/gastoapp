@@ -43,7 +43,7 @@ export default async function ModulesSummary({ supabase }) {
   return (
     <section aria-labelledby="modulos" className="flex flex-col gap-2">
       <h2 id="modulos" className="px-1 text-[13px] font-semibold uppercase tracking-wide text-muted">{month.label}</h2>
-      <ul className="overflow-hidden rounded-2xl bg-card">
+      <ul data-stagger className="overflow-hidden rounded-2xl bg-card">
         {rows.map((r) => (
           <li key={r.key} className="border-t border-line first:border-t-0">
             <Link href={r.href} className="flex min-h-14 items-center gap-3 px-4 py-2.5 active:bg-fill">
