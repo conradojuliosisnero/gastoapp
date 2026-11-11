@@ -6,6 +6,7 @@ import { getUsdRate } from "@/lib/fx";
 import { isUpcoming } from "@/lib/gastos";
 import { selectAll } from "@/lib/select-all";
 import { compare, totals } from "@/lib/subscriptions";
+import { COLUMNS, fromRow, nextRenewal } from "@/lib/subscription-store";
 import { formatCOP, formatMoney, today, usdToCop } from "@/lib/money";
 import CountUp from "@/app/count-up";
 import Progress from "@/app/progress";
@@ -31,7 +32,7 @@ export default async function AnualPage({ searchParams }) {
     selectAll(() => supabase.from("transactions").select("occurred_on, amount_enc, module, category_id").gte("occurred_on", `${year}-01-01`).lt("occurred_on", `${year + 1}-01-01`)),
     getCategories(supabase, "gastos"),
     getCategories(supabase, "juegos"),
-    supabase.from("subscriptions").select("id, name_enc, currency, monthly_enc, annual_enc, billing").order("created_at"),
+    supabase.from("subscriptions").select(COLUMNS).order("created_at"),
     getUsdRate(),
   ]);
   if (subsRes.error) throw subsRes.error;
@@ -56,14 +57,7 @@ export default async function AnualPage({ searchParams }) {
   const gameSubsCat = juegosCats.find((c) => c.name === "Suscripción");
   const gameSubsSpent = gameSubsCat ? txs.filter((t) => t.categoryId === gameSubsCat.id).reduce((s, t) => s + t.amount, 0) : 0;
 
-  const subs = subsRes.data.map((s) => ({
-    id: s.id,
-    name: decrypt(s.name_enc),
-    currency: s.currency,
-    monthly: s.monthly_enc ? Number(decrypt(s.monthly_enc)) : null,
-    annual: s.annual_enc ? Number(decrypt(s.annual_enc)) : null,
-    billing: s.billing,
-  }));
+  const subs = subsRes.data.map(fromRow);
   const missingRate = !rate && subs.some((s) => s.currency === "USD");
   const toCop = (n, currency) => (currency === "USD" ? (rate ? usdToCop(n, rate) : 0) : n);
   const subTotals = totals(subs, toCop);
@@ -154,6 +148,13 @@ export default async function AnualPage({ searchParams }) {
                             {s.billing === "anual" ? "Pago anual" : `${formatMoney(s.monthly, s.currency)} al mes`}
                             {s.currency === "USD" && rate ? ` · ≈ ${formatCOP(toCop(c.yearCost, "USD"))} al año` : ""}
                           </span>
+                          {(s.renewsOn || s.source) && (
+                            <span className="truncate text-[13px] text-muted">
+                              {s.renewsOn && `Se renueva el ${new Intl.DateTimeFormat("es-CO", { day: "numeric", month: "short", timeZone: "UTC" }).format(new Date(`${nextRenewal(s.renewsOn, s.billing, todayDate)}T00:00:00Z`))}`}
+                              {s.renewsOn && s.source && " · "}
+                              {s.source}
+                            </span>
+                          )}
                           {switchTo ? (
                             <span className="text-[13px] font-semibold text-ok">
                               {switchTo === "anual" ? "Conviene el plan anual" : "Conviene pagar mensual"}: ahorras {formatMoney(c.saving, s.currency)} ({c.pct}%)

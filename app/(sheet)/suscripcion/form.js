@@ -9,11 +9,11 @@ import { toast } from "@/lib/toast";
 import { useConfirm } from "@/app/confirm";
 import Spinner from "@/app/spinner";
 import { SaveBar, SheetHeader } from "../sheet-header";
-import { Field, FormError, Section, Segmented, inputCls } from "@/app/form-kit";
+import { Field, FormError, Section, Segmented, dateCls, inputCls } from "@/app/form-kit";
 
 const show = (n, currency) => (n == null ? "" : currency === "USD" ? (n / 100).toFixed(2) : typingMoney(String(n)));
 
-export default function SubscriptionForm({ sub }) {
+export default function SubscriptionForm({ sub, cards = [] }) {
   const router = useRouter();
   const [confirm, dialog] = useConfirm();
   const [currency, setCurrency] = useState(sub?.currency ?? "COP");
@@ -100,6 +100,30 @@ export default function SubscriptionForm({ sub }) {
         <Field label="Plan anual" hint="12 meses, opcional">{field("annual", annual, setAnnual, "Opcional")}</Field>
         <Field label="Hoy la pago" as="div">
           <Segmented label="Hoy la pago" name="billing" options={[["mensual", "Mensual"], ["anual", "Anual"]]} value={billing} onChange={setBilling} />
+        </Field>
+      </Section>
+
+      <Section title="Renovación" footer="Te avisamos unos días antes de que se renueve. La extensión SubTrack usa estos mismos datos.">
+        <Field label="Dónde la compraste" hint="tienda o sitio">
+          <input name="source" maxLength={120} defaultValue={sub?.source ?? ""} placeholder="Ej. Google Play, netflix.com" className={`${inputCls} text-right`} />
+        </Field>
+        <Field label="Próxima renovación">
+          <input name="renewsOn" type="date" defaultValue={sub?.renewsOn ?? ""} className={dateCls} />
+        </Field>
+        <Field label="Se cobra a">
+          <select
+            name="cardId"
+            aria-label="Se cobra a"
+            defaultValue={sub?.cardId ?? ""}
+            className="min-w-0 max-w-full cursor-pointer appearance-none truncate rounded-lg bg-field px-2.5 py-1.5 text-right text-[15px] font-semibold text-accent outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          >
+            <option value="">Débito u otro medio</option>
+            {cards.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
         </Field>
       </Section>
 

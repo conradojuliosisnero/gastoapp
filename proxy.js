@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
-const PUBLIC_PATHS = ["/login", "/auth", "/api/cron"]; // the cron route checks its own secret
+const PUBLIC_PATHS = ["/login", "/auth", "/api/cron", "/api/ext"]; // these API routes check their own secret or bearer token
 
 export async function proxy(request) {
   let response = NextResponse.next({ request });
