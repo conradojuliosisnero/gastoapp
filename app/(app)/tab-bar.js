@@ -42,7 +42,7 @@ export default function TabBar() {
   return (
     <div className="fixed inset-x-0 bottom-[max(16px,env(safe-area-inset-bottom))] z-20 mx-auto flex w-[calc(100%-32px)] max-w-[416px] items-center gap-3">
     <nav ref={nav} aria-label="Navegación principal" className="flex-1">
-      <div className="relative grid h-16 grid-cols-4 rounded-full border border-white/80 bg-white/60 p-1.5 shadow-[0_10px_30px_rgba(0,0,0,0.12),inset_0_1px_0_rgba(255,255,255,0.9)] backdrop-blur-xl backdrop-saturate-[1.8]">
+      <div className="relative grid h-16 grid-cols-4 rounded-full border border-glass-edge bg-glass p-1.5 shadow-[0_10px_30px_rgba(0,0,0,0.12),inset_0_1px_0_var(--glass-edge)] backdrop-blur-xl backdrop-saturate-[1.8]">
         <span
           ref={pill}
           aria-hidden="true"
@@ -53,7 +53,7 @@ export default function TabBar() {
             key={tab.href}
             href={tab.href}
             aria-current={i === active ? "page" : undefined}
-            className="relative flex flex-col items-center justify-center gap-0.5 rounded-full text-[10px] font-medium text-[#3a3a3c] transition-colors aria-[current=page]:font-semibold aria-[current=page]:text-accent"
+            className="relative flex flex-col items-center justify-center gap-0.5 rounded-full text-[10px] font-medium text-ink-2 transition-colors aria-[current=page]:font-semibold aria-[current=page]:text-accent"
           >
             <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               {tab.icon}
@@ -67,7 +67,7 @@ export default function TabBar() {
     <Link
       href="/gastos/nuevo"
       aria-label="Agregar gasto"
-      className="flex size-16 shrink-0 items-center justify-center rounded-full border border-white/35 bg-accent/90 text-white shadow-[0_10px_30px_rgba(10,102,216,0.35),inset_0_1px_0_rgba(255,255,255,0.35)] backdrop-blur-xl transition-transform active:scale-95"
+      className="flex size-16 shrink-0 items-center justify-center rounded-full border border-white/35 bg-primary/90 text-white shadow-[0_10px_30px_rgba(10,102,216,0.35),inset_0_1px_0_rgba(255,255,255,0.35)] backdrop-blur-xl transition-transform active:scale-95"
     >
       <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
         <path d="M12 5v14" /><path d="M5 12h14" />

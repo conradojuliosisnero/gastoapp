@@ -1,6 +1,5 @@
 "use server";
 
-import { redirect } from "next/navigation";
 import { refresh } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
@@ -39,20 +38,22 @@ export async function createTransaction(_prev, formData) {
   });
   if (error) return { error: "No se pudo guardar. Intenta de nuevo." };
 
-  redirect(`/gastos?mes=${date.slice(0, 7)}`);
+  refresh();
+  return { ok: true, mes: date.slice(0, 7) };
 }
 
-export async function deleteTransaction(formData) {
-  const id = z.uuid().parse(formData.get("id"));
+export async function deleteTransaction(id) {
+  if (!z.uuid().safeParse(id).success) return { error: "Movimiento inválido." };
   const supabase = await createClient();
   const { error } = await supabase.from("transactions").delete().eq("id", id);
-  if (error) throw new Error("No se pudo borrar el movimiento.");
+  if (error) return { error: "No se pudo borrar. Intenta de nuevo." };
   refresh();
+  return { ok: true };
 }
 
 // Copies last month's fixed expenses into this month, keeping the day (clamped to the month's length).
-export async function copyFixedFromPreviousMonth(formData) {
-  const target = monthRange(formData.get("mes"));
+export async function copyFixedFromPreviousMonth(mes) {
+  const target = monthRange(mes);
   const source = monthRange(target.prev);
   const supabase = await createClient();
 
@@ -63,7 +64,7 @@ export async function copyFixedFromPreviousMonth(formData) {
     .eq("kind", "fijo")
     .gte("occurred_on", source.start)
     .lt("occurred_on", source.end);
-  if (error) throw new Error("No se pudieron leer los gastos fijos.");
+  if (error) return { error: "No se pudieron leer los gastos fijos." };
 
   const lastDay = new Date(`${target.end}T00:00:00Z`);
   lastDay.setUTCDate(0);
@@ -78,23 +79,28 @@ export async function copyFixedFromPreviousMonth(formData) {
 
   if (rows.length) {
     const { error: insertError } = await supabase.from("transactions").insert(rows);
-    if (insertError) throw new Error("No se pudieron copiar los gastos fijos.");
+    if (insertError) return { error: "No se pudieron copiar los gastos fijos." };
   }
   refresh();
+  return { ok: true, count: rows.length };
 }
 
-export async function saveBudgets(formData) {
-  const supabase = await createClient();
-  const updates = [...formData.entries()]
-    .filter(([key]) => key.startsWith("budget:"))
-    .map(([key, value]) => {
-      const id = z.uuid().parse(key.slice("budget:".length));
-      const amount = parseAmount(value);
-      if (amount != null && amount > MAX_AMOUNT) throw new Error("Presupuesto demasiado grande.");
-      return supabase.from("categories").update({ monthly_budget_enc: amount ? encrypt(amount) : null }).eq("id", id);
-    });
+export async function saveBudgets(_prev, formData) {
+  const entries = [...formData.entries()].filter(([key]) => key.startsWith("budget:"));
+  const budgets = [];
+  for (const [key, value] of entries) {
+    const id = key.slice("budget:".length);
+    const amount = parseAmount(value);
+    if (!z.uuid().safeParse(id).success) return { error: "Categoría inválida." };
+    if (amount != null && amount > MAX_AMOUNT) return { error: "Un presupuesto es demasiado grande." };
+    budgets.push({ id, amount });
+  }
 
-  const results = await Promise.all(updates);
-  if (results.some((r) => r.error)) throw new Error("No se pudieron guardar los presupuestos.");
-  redirect("/gastos");
+  const supabase = await createClient();
+  const results = await Promise.all(
+    budgets.map(({ id, amount }) => supabase.from("categories").update({ monthly_budget_enc: amount ? encrypt(amount) : null }).eq("id", id))
+  );
+  if (results.some((r) => r.error)) return { error: "No se pudieron guardar los presupuestos." };
+  refresh();
+  return { ok: true };
 }

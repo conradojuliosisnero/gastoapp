@@ -4,8 +4,7 @@ import { decrypt } from "@/lib/crypto";
 import { getCategories } from "@/lib/categories";
 import { summarize } from "@/lib/gastos";
 import { formatCOP, monthRange } from "@/lib/money";
-import { copyFixedFromPreviousMonth } from "./actions";
-import Movements from "./movements";
+import Movements, { CopyFixedButton } from "./movements";
 
 export const metadata = { title: "Gastos" };
 
@@ -60,11 +59,11 @@ export default async function GastosPage({ searchParams }) {
       <header className="flex flex-col gap-1 px-1">
         <h1 className="text-[34px] font-bold tracking-tight">Gastos</h1>
         <nav aria-label="Mes" className="flex items-center justify-between">
-          <Link href={`/gastos?mes=${month.prev}`} aria-label="Mes anterior" className="flex size-11 items-center justify-center text-accent">
+          <Link href={`/gastos?mes=${month.prev}`} aria-label="Mes anterior" className="flex size-11 items-center justify-center rounded-full text-accent transition active:scale-90 active:bg-accent/10">
             <Chevron d="m15 6-6 6 6 6" />
           </Link>
           <span className="text-[17px] font-semibold">{month.label}</span>
-          <Link href={`/gastos?mes=${month.next}`} aria-label="Mes siguiente" className="flex size-11 items-center justify-center text-accent">
+          <Link href={`/gastos?mes=${month.next}`} aria-label="Mes siguiente" className="flex size-11 items-center justify-center rounded-full text-accent transition active:scale-90 active:bg-accent/10">
             <Chevron d="m9 6 6 6-6 6" />
           </Link>
         </nav>
@@ -86,14 +85,14 @@ export default async function GastosPage({ searchParams }) {
             </div>
           </>
         ) : (
-          <Link href="/gastos/presupuesto" className="text-[15px] text-accent">Definir presupuestos</Link>
+          <Link href="/gastos/presupuesto" className="flex min-h-11 items-center text-[15px] font-semibold text-accent">Definir presupuestos →</Link>
         )}
       </section>
 
       <section className="flex flex-col gap-2">
         <div className="flex items-baseline justify-between px-1">
           <h2 className="text-xl font-bold tracking-tight">Por categoría</h2>
-          <Link href="/gastos/presupuesto" className="flex min-h-11 items-center text-[15px] text-accent">Ajustar</Link>
+          <Link href="/gastos/presupuesto" className="flex min-h-9 items-center rounded-full bg-accent/10 px-3.5 text-[15px] font-semibold text-accent transition active:scale-95">Ajustar</Link>
         </div>
         <ul className="overflow-hidden rounded-2xl bg-card">
           {summary.rows.map((c) => (
@@ -118,13 +117,7 @@ export default async function GastosPage({ searchParams }) {
 
       <section className="flex flex-col gap-3">
         <h2 className="px-1 text-xl font-bold tracking-tight">Movimientos</h2>
-        {!hasFixed && previousFixed.count > 0 && (
-          <form action={copyFixedFromPreviousMonth} className="flex items-center justify-between gap-3 rounded-2xl bg-card px-4 py-3">
-            <input type="hidden" name="mes" value={month.key} />
-            <span className="text-[15px] text-muted">El mes pasado tuviste {previousFixed.count} gastos fijos.</span>
-            <button type="submit" className="min-h-9 shrink-0 rounded-full bg-accent px-4 text-sm font-semibold text-white">Copiarlos</button>
-          </form>
-        )}
+        {!hasFixed && previousFixed.count > 0 && <CopyFixedButton mes={month.key} count={previousFixed.count} />}
         <Movements movements={movements} />
       </section>
     </div>

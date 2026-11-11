@@ -13,12 +13,20 @@ const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, locale: "es-CO" });
 const errors = [];
 page.on("pageerror", (e) => errors.push(e.message));
-page.on("dialog", (d) => d.accept());
+page.on("dialog", (d) => errors.push(`diálogo nativo inesperado: ${d.message()}`) && d.dismiss());
 
 // Next keeps previous screens mounted but hidden (instant back navigation), so only look at what is visible.
 const v = (locator) => locator.filter({ visible: true });
 const text = (t, opts) => v(page.getByText(t, opts));
 const role = (r, opts) => v(page.getByRole(r, opts));
+const toastSays = (t) => page.getByRole("status").getByText(t).waitFor();
+// Confirms through the app's own modal (never the browser's confirm()).
+async function confirmModal(button) {
+  const dialog = page.getByRole("dialog");
+  await dialog.waitFor();
+  await dialog.getByRole("button", { name: button }).click();
+  await dialog.waitFor({ state: "hidden" });
+}
 
 const step = async (name, fn) => {
   try {
@@ -61,7 +69,8 @@ await step("crear gasto fijo desde el botón +", async () => {
   await text("Comida", { exact: true }).click();
   await v(page.getByPlaceholder("Ej. Mercado")).fill(unique);
   await text("Gasto fijo (se repite cada mes)").click();
-  await role("button", { name: "Guardar" }).click();
+  await role("button", { name: "Guardar gasto" }).click();
+  await toastSays("Gasto guardado");
   await page.waitForURL(/\/gastos\?mes=/);
   await text(unique).waitFor();
   await text(/45\.000/).first().waitFor();
@@ -71,8 +80,8 @@ await step("validación: monto vacío muestra error", async () => {
   await page.goto(`${BASE_URL}/gastos/nuevo`);
   const amount = v(page.getByPlaceholder("$0"));
   await amount.evaluate((el) => el.removeAttribute("required"));
-  await role("button", { name: "Guardar" }).click();
-  await text("Escribe el monto.").waitFor();
+  await role("button", { name: "Guardar gasto" }).click();
+  await text("Escribe el monto.").first().waitFor();
   await role("link", { name: "Cancelar" }).click();
   await role("heading", { name: "Por categoría" }).waitFor();
 });
@@ -81,7 +90,8 @@ await step("definir presupuesto y ver el resumen", async () => {
   await role("link", { name: "Ajustar" }).click();
   await role("heading", { name: "Presupuestos" }).waitFor();
   await v(page.getByLabel("Comida")).fill("40000");
-  await role("button", { name: "Guardar" }).click();
+  await role("button", { name: "Guardar presupuestos" }).click();
+  await toastSays("Presupuestos guardados");
   await text(/Te pasaste/).waitFor();
   await text(/Excedido por/).waitFor();
   await page.screenshot({ path: `${SHOTS}/gastos.png` });
@@ -97,6 +107,11 @@ await step("filtros fijos / variables", async () => {
 
 await step("borrar el gasto", async () => {
   await role("button", { name: `Borrar ${unique}` }).click();
+  await confirmModal("Cancelar");
+  await text(unique).waitFor();
+  await role("button", { name: `Borrar ${unique}` }).click();
+  await confirmModal("Borrar");
+  await toastSays("Gasto borrado");
   await text(unique).waitFor({ state: "detached" });
 });
 
@@ -111,20 +126,23 @@ await step("copiar gastos fijos del mes anterior", async () => {
   await v(page.getByPlaceholder("Ej. Mercado")).fill(fixed);
   await v(page.locator('input[name="date"]')).fill(prev);
   await text("Gasto fijo (se repite cada mes)").click();
-  await role("button", { name: "Guardar" }).click();
+  await role("button", { name: "Guardar gasto" }).click();
   await page.waitForURL(new RegExp(`mes=${prev.slice(0, 7)}`));
   await text(fixed).waitFor();
 
   await role("link", { name: "Mes siguiente" }).click();
   await role("button", { name: "Copiarlos" }).click();
+  await toastSays("1 gasto fijo copiado");
   await text(fixed).waitFor();
   assert.equal(await role("button", { name: "Copiarlos" }).count(), 0);
 
   // Clean up both copies.
   await role("button", { name: `Borrar ${fixed}` }).click();
+  await confirmModal("Borrar");
   await text(fixed).waitFor({ state: "detached" });
   await role("link", { name: "Mes anterior" }).click();
   await role("button", { name: `Borrar ${fixed}` }).click();
+  await confirmModal("Borrar");
   await text(fixed).waitFor({ state: "detached" });
 });
 
@@ -132,9 +150,30 @@ await step("sin errores de JavaScript en el navegador", async () => {
   assert.deepEqual(errors, []);
 });
 
-await step("cerrar sesión", async () => {
+await step("modo oscuro desde Ajustes y se mantiene al recargar", async () => {
   await role("link", { name: "Inicio" }).click();
-  await role("button", { name: "Salir" }).click();
+  await role("link", { name: "Ajustes" }).click();
+  await role("heading", { name: "Ajustes" }).waitFor();
+  await role("radio", { name: "Oscuro" }).click();
+  const bg = () => page.evaluate(() => [document.documentElement.dataset.theme, getComputedStyle(document.body).backgroundColor]);
+  assert.deepEqual(await bg(), ["dark", "rgb(0, 0, 0)"]);
+  await page.reload();
+  await role("heading", { name: "Ajustes" }).waitFor();
+  assert.deepEqual(await bg(), ["dark", "rgb(0, 0, 0)"]);
+  assert.equal(await role("radio", { name: "Oscuro" }).getAttribute("aria-checked"), "true");
+  await page.screenshot({ path: `${SHOTS}/ajustes-oscuro.png` });
+  await role("radio", { name: "Claro" }).click();
+  assert.deepEqual(await bg(), ["light", "rgb(242, 242, 247)"]);
+  await role("radio", { name: "Sistema" }).click();
+});
+
+await step("Ajustes muestra cómo instalar la app", async () => {
+  await page.getByRole("region", { name: "Instalar la app" }).waitFor();
+});
+
+await step("cerrar sesión con confirmación", async () => {
+  await role("button", { name: "Cerrar sesión" }).click();
+  await confirmModal("Cerrar sesión");
   await page.waitForURL(/\/login/);
 });
 

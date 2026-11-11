@@ -61,7 +61,7 @@ export default function LoginForm() {
       <button
         type="submit"
         disabled={pending}
-        className="min-h-12 rounded-2xl bg-accent text-[17px] font-semibold text-white transition-opacity active:opacity-80 disabled:opacity-60"
+        className="min-h-12 rounded-2xl bg-primary text-[17px] font-semibold text-white transition active:scale-[0.98] disabled:opacity-70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
       >
         {pending ? "Un momento…" : mode === "signup" ? "Crear cuenta" : "Entrar"}
       </button>

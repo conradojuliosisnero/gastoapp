@@ -2,23 +2,72 @@
 
 @theme inline {
   --font-sans: var(--font-inter), -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+
+  --color-bg: var(--bg);
+  --color-card: var(--card);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-segment: var(--segment);
+  --color-fill: var(--fill);
+  --color-accent: var(--accent);
+  --color-primary: var(--primary);
+  --color-ok: var(--ok);
+  --color-warn: var(--warn);
+  --color-danger: var(--danger);
+  --color-glass: var(--glass);
+  --color-glass-edge: var(--glass-edge);
+  --color-field: var(--field);
+  --color-switch: var(--switch);
 }
 
-/* Colores del diseño en Claude Design (estilo iOS, modo claro). */
-@theme {
-  --color-bg: #f2f2f7;
-  --color-card: #ffffff;
-  --color-ink: #1c1c1e;
-  --color-muted: #6e6e73;
-  --color-line: #e5e5ea;
-  --color-segment: #e3e3e8;
-  --color-accent: #0a66d8;
-  --color-ok: #1f7a3a;
-  --color-warn: #b4530a;
+/* Colores del diseño (estilo iOS). `accent` es para texto e íconos; `primary` es el relleno de botones con texto blanco. */
+:root {
+  color-scheme: light;
+  --bg: #f2f2f7;
+  --card: #ffffff;
+  --ink: #1c1c1e;
+  --ink-2: #3a3a3c;
+  --muted: #6e6e73;
+  --line: #e5e5ea;
+  --segment: #e3e3e8;
+  --fill: #eeeef0;
+  --accent: #0a66d8;
+  --primary: #0a66d8;
+  --ok: #1f7a3a;
+  --warn: #b4530a;
+  --danger: #d70015;
+  --glass: rgb(255 255 255 / 0.62);
+  --glass-edge: rgb(255 255 255 / 0.8);
+  --field: #eaf2fd;
+  --switch: #d1d1d6;
+}
+
+/* data-theme is set before paint by the script in app/layout.js (system, light or dark). */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #000000;
+  --card: #1c1c1e;
+  --ink: #f5f5f7;
+  --ink-2: #d1d1d6;
+  --muted: #98989d;
+  --line: #38383a;
+  --segment: #2c2c2e;
+  --fill: #2c2c2e;
+  --accent: #4da3ff;
+  --primary: #0a66d8;
+  --ok: #30d158;
+  --warn: #ffa340;
+  --danger: #ff6961;
+  --glass: rgb(28 28 30 / 0.62);
+  --glass-edge: rgb(255 255 255 / 0.12);
+  --field: rgb(77 163 255 / 0.16);
+  --switch: #39393d;
 }
 
 body {
-  background: var(--color-bg);
-  color: var(--color-ink);
+  background: var(--bg);
+  color: var(--ink);
   -webkit-tap-highlight-color: transparent;
 }

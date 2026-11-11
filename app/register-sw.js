@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import "@/lib/install"; // starts listening for the install prompt as early as possible
 
 export default function RegisterServiceWorker() {
   useEffect(() => {
