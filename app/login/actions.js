@@ -30,6 +30,7 @@ export async function authenticate(_prevState, formData) {
   }
 
   const { error } = await supabase.auth.signInWithPassword(parsed.data);
+  if (error?.code === "email_not_confirmed") return { error: "Primero confirma tu cuenta con el enlace que te enviamos al correo." };
   if (error) return { error: "Correo o contraseña incorrectos." };
   redirect("/inicio");
 }
