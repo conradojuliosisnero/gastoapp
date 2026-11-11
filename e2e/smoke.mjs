@@ -335,16 +335,16 @@ await step("videojuegos: límite, compra por plataforma y lista de deseos", asyn
   await v(page.getByPlaceholder("$0")).fill("89900");
   await text("DLC", { exact: true }).click();
   await v(page.getByPlaceholder("Ej. Expansión de historia")).fill(game);
-  await role("radio", { name: "PC" }).click();
+  await role("radio", { name: "PC", exact: true }).click();
   await role("button", { name: "Guardar compra" }).click();
   await toastSays("Compra guardada");
   await page.waitForURL(/\/juegos\?mes=/);
   await text(game).waitFor();
   await text(/\+\$\s39\.900 sobre el límite/).waitFor();
 
-  await role("radio", { name: "PS5" }).click();
+  await role("radio", { name: "PS5", exact: true }).click();
   await text("No hay compras en esta plataforma.").waitFor();
-  await role("radio", { name: "Todas" }).click();
+  await role("radio", { name: "Todas", exact: true }).click();
 
   await role("link", { name: "Agregar" }).click();
   await role("heading", { name: "Lista de deseos" }).waitFor();
