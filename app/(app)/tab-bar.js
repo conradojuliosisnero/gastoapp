@@ -25,6 +25,7 @@ const TABS = [
 export default function TabBar() {
   const pathname = usePathname();
   const active = TABS.findIndex((t) => pathname.startsWith(t.href));
+  const fab = pathname.startsWith("/juegos") ? { href: "/juegos/nuevo", label: "Agregar compra de juego" } : { href: "/gastos/nuevo", label: "Agregar gasto" };
   const nav = useRef(null);
   const pill = useRef(null);
   const mounted = useRef(false);
@@ -63,10 +64,9 @@ export default function TabBar() {
         ))}
       </div>
     </nav>
-    {/* shortcut: always opens a new expense; point it per tab when Internet and Juegos get their own forms. */}
     <Link
-      href="/gastos/nuevo"
-      aria-label="Agregar gasto"
+      href={fab.href}
+      aria-label={fab.label}
       className="flex size-16 shrink-0 items-center justify-center rounded-full border border-white/35 bg-primary/90 text-white shadow-[0_10px_30px_rgba(10,102,216,0.35),inset_0_1px_0_rgba(255,255,255,0.35)] backdrop-blur-xl transition-transform active:scale-95"
     >
       <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">

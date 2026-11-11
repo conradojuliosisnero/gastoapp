@@ -10,7 +10,14 @@ import { SaveBar, SheetHeader } from "../../sheet-header";
 
 const group = new Intl.NumberFormat("es-CO");
 
-export default function NewExpenseForm({ categories: initialCategories, defaultDate }) {
+const COPY = {
+  gastos: { title: "Nuevo gasto", back: "/gastos", hint: "Ej. Mercado", save: "Guardar gasto", saved: "Gasto guardado", newCat: "Ej. Mascotas", legend: "Categoría" },
+  juegos: { title: "Nueva compra", back: "/juegos", hint: "Ej. Expansión de historia", save: "Guardar compra", saved: "Compra guardada", newCat: "Ej. Pase de batalla", legend: "Tipo" },
+};
+
+export default function NewExpenseForm({ categories: initialCategories, defaultDate, module = "gastos" }) {
+  const copy = COPY[module];
+  const [platform, setPlatform] = useState("PS5");
   const router = useRouter();
   const [amount, setAmount] = useState("");
   const [categories, setCategories] = useState(initialCategories);
@@ -21,7 +28,7 @@ export default function NewExpenseForm({ categories: initialCategories, defaultD
 
   function addCategory() {
     startCreating(async () => {
-      const result = await createCategory(newName);
+      const result = await createCategory(newName, module);
       if (result.error) return toast(result.error, "error");
       setCategories((list) => [...list, result.category]);
       setSelected(result.category.id);
@@ -34,8 +41,8 @@ export default function NewExpenseForm({ categories: initialCategories, defaultD
     const result = await createTransaction(prev, formData);
     if (result.ok) {
       setAmount(""); // the form stays mounted (hidden) after leaving; start clean next time
-      toast("Gasto guardado");
-      router.push(`/gastos?mes=${result.mes}`);
+      toast(copy.saved);
+      router.push(`/${result.module}?mes=${result.mes}`);
     } else {
       toast(result.error, "error");
     }
@@ -44,7 +51,8 @@ export default function NewExpenseForm({ categories: initialCategories, defaultD
 
   return (
     <form action={formAction} className="flex flex-col gap-5">
-      <SheetHeader title="Nuevo gasto" cancelHref="/gastos" />
+      <SheetHeader title={copy.title} cancelHref={copy.back} />
+      <input type="hidden" name="module" value={module} />
 
       <label className="flex flex-col items-center gap-1 py-3">
         <span className="text-[13px] font-semibold uppercase tracking-wide text-muted">Monto (COP)</span>
@@ -65,7 +73,7 @@ export default function NewExpenseForm({ categories: initialCategories, defaultD
       </label>
 
       <fieldset className="flex min-w-0 flex-col gap-2">
-        <legend className="mb-2 px-1 text-[13px] font-semibold uppercase tracking-wide text-muted">Categoría</legend>
+        <legend className="mb-2 px-1 text-[13px] font-semibold uppercase tracking-wide text-muted">{copy.legend}</legend>
         <div className="flex flex-wrap gap-2">
           {categories.map((c) => (
             <label key={c.id} className="cursor-pointer">
@@ -92,7 +100,7 @@ export default function NewExpenseForm({ categories: initialCategories, defaultD
               aria-label="Nombre de la nueva categoría"
               autoFocus
               maxLength={40}
-              placeholder="Ej. Mascotas"
+              placeholder={copy.newCat}
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
               onKeyDown={(e) => {
@@ -121,8 +129,8 @@ export default function NewExpenseForm({ categories: initialCategories, defaultD
 
       <div className="overflow-hidden rounded-2xl bg-card">
         <label className="flex min-h-12 items-center gap-3 px-4">
-          <span className="w-28 shrink-0 text-base">Descripción</span>
-          <input name="description" maxLength={80} placeholder="Ej. Mercado" className="min-w-0 flex-1 bg-transparent text-base outline-none" />
+          <span className="w-28 shrink-0 text-base">{module === "juegos" ? "Juego" : "Descripción"}</span>
+          <input name="description" maxLength={80} placeholder={copy.hint} className="min-w-0 flex-1 bg-transparent text-base outline-none" />
         </label>
         <div className="ml-4 h-px bg-line" />
         <label className="flex min-h-12 items-center justify-between gap-3 px-4">
@@ -130,17 +138,38 @@ export default function NewExpenseForm({ categories: initialCategories, defaultD
           <input name="date" type="date" required defaultValue={defaultDate} className="rounded-lg bg-field px-2.5 py-1.5 text-[15px] font-medium text-accent outline-none" />
         </label>
         <div className="ml-4 h-px bg-line" />
-        <label className="flex min-h-12 cursor-pointer items-center justify-between gap-3 px-4">
-          <span className="text-base">Gasto fijo (se repite cada mes)</span>
-          <input name="fijo" type="checkbox" role="switch" className="peer sr-only" />
-          <span aria-hidden="true" className="flex h-[31px] w-[51px] shrink-0 items-center rounded-full bg-switch p-0.5 transition-colors peer-checked:bg-ok peer-checked:*:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-accent">
-            <span className="size-[27px] rounded-full bg-white shadow transition-transform" />
-          </span>
-        </label>
+        {module === "juegos" ? (
+          <div className="flex min-h-12 items-center justify-between gap-3 px-4">
+            <span id="platform-label" className="text-base">Plataforma</span>
+            <input type="hidden" name="platform" value={platform} />
+            <div role="radiogroup" aria-labelledby="platform-label" className="grid grid-cols-3 gap-0.5 rounded-[10px] bg-segment p-0.5">
+              {["PS5", "PC", "Otra"].map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  role="radio"
+                  aria-checked={platform === p}
+                  onClick={() => setPlatform(p)}
+                  className="min-h-8 rounded-lg px-3 text-[13px] font-semibold transition active:scale-95 aria-checked:bg-card aria-checked:shadow-sm"
+                >
+                  {p}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <label className="flex min-h-12 cursor-pointer items-center justify-between gap-3 px-4">
+            <span className="text-base">Gasto fijo (se repite cada mes)</span>
+            <input name="fijo" type="checkbox" role="switch" className="peer sr-only" />
+            <span aria-hidden="true" className="flex h-[31px] w-[51px] shrink-0 items-center rounded-full bg-switch p-0.5 transition-colors peer-checked:bg-ok peer-checked:*:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-accent">
+              <span className="size-[27px] rounded-full bg-white shadow transition-transform" />
+            </span>
+          </label>
+        )}
       </div>
 
       <p aria-live="polite" className="min-h-5 px-1 text-sm text-danger">{state?.error}</p>
-      <SaveBar pending={pending} label="Guardar gasto" />
+      <SaveBar pending={pending} label={copy.save} />
     </form>
   );
 }

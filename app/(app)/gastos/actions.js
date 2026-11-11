@@ -112,14 +112,15 @@ export async function saveBudgets(_prev, formData) {
 
 const categoryName = z.string().trim().min(1, "Escribe un nombre.").max(40, "Máximo 40 caracteres.");
 
-export async function createCategory(name) {
+export async function createCategory(name, module = "gastos") {
+  if (!["gastos", "juegos"].includes(module)) return { error: "Módulo inválido." };
   const parsed = categoryName.safeParse(name);
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("categories")
-    .insert({ module: "gastos", name: parsed.data, sort: 100 })
+    .insert({ module, name: parsed.data, sort: 100 })
     .select("id, name")
     .single();
   if (error?.code === "23505") return { error: `Ya tienes una categoría "${parsed.data}".` };

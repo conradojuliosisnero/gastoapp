@@ -317,6 +317,53 @@ await step("internet: configurar plan entre 3 y marcar pagos", async () => {
   await text(/\$\s35\.000 · Pagado/).waitFor();
 });
 
+await step("videojuegos: límite, compra por plataforma y lista de deseos", async () => {
+  const game = `${unique} juego`;
+  await role("link", { name: "Juegos" }).click();
+  await role("link", { name: "Poner límite" }).click();
+  await role("heading", { name: "Límite mensual" }).waitFor();
+  await v(page.getByPlaceholder("Sin límite")).fill("50000");
+  await role("button", { name: "Guardar límite" }).click();
+  await toastSays("Límite guardado");
+  await text(/Límite mensual \$\s50\.000/).waitFor();
+
+  await role("link", { name: "Agregar compra de juego" }).click();
+  await role("heading", { name: "Nueva compra" }).waitFor();
+  await v(page.getByPlaceholder("$0")).fill("89900");
+  await text("DLC", { exact: true }).click();
+  await v(page.getByPlaceholder("Ej. Expansión de historia")).fill(game);
+  await role("radio", { name: "PC" }).click();
+  await role("button", { name: "Guardar compra" }).click();
+  await toastSays("Compra guardada");
+  await page.waitForURL(/\/juegos\?mes=/);
+  await text(game).waitFor();
+  await text(/\+\$\s39\.900 sobre el límite/).waitFor();
+
+  await role("radio", { name: "PS5" }).click();
+  await text("No hay compras en esta plataforma.").waitFor();
+  await role("radio", { name: "Todas" }).click();
+
+  await role("link", { name: "Agregar" }).click();
+  await role("heading", { name: "Lista de deseos" }).waitFor();
+  await v(page.getByPlaceholder(/Juego de fútbol/)).fill(`${unique} deseo`);
+  await v(page.getByRole("textbox", { name: "Precio actual" })).fill("150000");
+  await v(page.getByRole("textbox", { name: "Lo compro a" })).fill("160000");
+  await role("button", { name: "Agregar a la lista" }).click();
+  await toastSays("Agregado a tu lista de deseos");
+  await text("¡Llegó a tu precio!").waitFor();
+
+  await role("link", { name: /Notificaciones, \d+ pendiente/ }).click();
+  await text("Te pasaste del límite de juegos").waitFor();
+  await page.goBack();
+
+  await role("button", { name: `Borrar ${game}` }).click();
+  await confirmModal("Borrar");
+  await toastSays("Compra borrada");
+  await role("button", { name: `Quitar ${unique} deseo` }).click();
+  await confirmModal("Borrar");
+  await toastSays("Quitado de la lista");
+});
+
 await step("sin errores de JavaScript en el navegador", async () => {
   assert.deepEqual(errors, []);
 });
