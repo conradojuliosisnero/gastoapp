@@ -50,11 +50,11 @@ export default function TabBar() {
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col gap-6 border-r border-line bg-card/70 px-4 py-6 backdrop-blur-xl lg:flex">
       <Link href="/inicio" className="flex items-center gap-3 rounded-xl px-2 py-1 focus-visible:outline-2 focus-visible:outline-accent">
         <Image src="/icons/icon-192.png" alt="" width={36} height={36} className="rounded-[10px] shadow-sm" />
-        <span className="text-[19px] font-bold tracking-tight">GastoApp</span>
+        <span className="font-display text-[19px] font-semibold tracking-tight">GastoApp</span>
       </Link>
       <Link
         href={fab.href}
-        className="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary text-[15px] font-semibold text-white shadow-[0_8px_20px_rgba(10,102,216,0.28)] transition hover:brightness-110 active:scale-[0.98]"
+        className="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary text-[15px] font-semibold text-white shadow-[0_8px_20px_rgba(15,118,110,0.28)] transition hover:brightness-110 active:scale-[0.98]"
       >
         <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M12 5v14" /><path d="M5 12h14" /></svg>
         {fab.text}
@@ -112,7 +112,7 @@ export default function TabBar() {
     <Link
       href={fab.href}
       aria-label={fab.label}
-      className="flex size-16 shrink-0 items-center justify-center rounded-full border border-white/35 bg-primary/90 text-white shadow-[0_10px_30px_rgba(10,102,216,0.35),inset_0_1px_0_rgba(255,255,255,0.35)] backdrop-blur-xl transition-transform active:scale-95"
+      className="flex size-16 shrink-0 items-center justify-center rounded-full border border-white/35 bg-primary/90 text-white shadow-[0_10px_30px_rgba(15,118,110,0.35),inset_0_1px_0_rgba(255,255,255,0.35)] backdrop-blur-xl transition-transform active:scale-95"
     >
       <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
         <path d="M12 5v14" /><path d="M5 12h14" />

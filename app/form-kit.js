@@ -35,7 +35,7 @@ export function AmountHero({ label, value, onValue, currency = "COP", currencies
           value={value}
           onChange={(e) => onValue(typingMoney(e.target.value, currency))}
           style={masked ? { WebkitTextSecurity: "disc" } : undefined}
-          className={`min-w-0 flex-1 bg-transparent text-[44px] leading-tight font-bold tracking-tight tabular-nums outline-none placeholder:text-muted/40 ${tone}`}
+          className={`min-w-0 flex-1 bg-transparent font-display text-[44px] leading-tight font-semibold tracking-tight tabular-nums outline-none placeholder:text-muted/40 ${tone}`}
           {...input}
         />
         {trailing}
@@ -128,7 +128,7 @@ export function ChoiceChips({ name, label, options, value, onChange, children })
               onChange(o.id);
               pop(e.currentTarget.nextElementSibling);
             }} className="peer sr-only" />
-          <span className="flex min-h-9 items-center gap-1.5 rounded-full bg-fill px-3.5 text-sm font-semibold text-ink-2 transition duration-200 active:scale-95 peer-checked:bg-primary peer-checked:text-white peer-checked:shadow-[0_4px_12px_rgba(10,102,216,0.3)] peer-focus-visible:ring-2 peer-focus-visible:ring-accent peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-card">
+          <span className="flex min-h-9 items-center gap-1.5 rounded-full bg-fill px-3.5 text-sm font-semibold text-ink-2 transition duration-200 active:scale-95 peer-checked:bg-primary peer-checked:text-white peer-checked:shadow-[0_4px_12px_rgba(15,118,110,0.3)] peer-focus-visible:ring-2 peer-focus-visible:ring-accent peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-card">
             {value === o.id && (
               <svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 5 5L20 7" /></svg>
             )}

@@ -86,7 +86,7 @@ export default async function GastosPage({ searchParams }) {
       <div className="flex min-w-0 flex-col gap-5">
       <section className="flex flex-col gap-3 rounded-[22px] bg-card p-5">
         <span className="text-[15px] text-muted">Gastado en el mes</span>
-        <CountUp value={summary.total} className="text-[36px] font-bold tracking-tight tabular-nums" />
+        <CountUp value={summary.total} className="font-display text-[36px] font-semibold tracking-tight tabular-nums" />
         {summary.budget > 0 ? (
           <>
             <Progress pct={pct} className={over ? "bg-warn" : "bg-accent"} />
@@ -115,7 +115,7 @@ export default async function GastosPage({ searchParams }) {
       </div>
 
       <section className="flex flex-col gap-3">
-        <h2 className="px-1 text-xl font-bold tracking-tight">Movimientos</h2>
+        <h2 className="px-1 font-display text-xl font-semibold tracking-tight">Movimientos</h2>
         {!hasFixed && previousFixed.count > 0 && <CopyFixedButton mes={month.key} count={previousFixed.count} />}
         <Movements movements={movements} />
       </section>

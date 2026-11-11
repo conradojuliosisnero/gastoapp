@@ -520,14 +520,14 @@ await step("modo oscuro desde Ajustes y se mantiene al recargar", async () => {
   await role("heading", { name: "Ajustes" }).waitFor();
   await role("radio", { name: "Oscuro" }).click();
   const bg = () => page.evaluate(() => [document.documentElement.dataset.theme, getComputedStyle(document.body).backgroundColor]);
-  assert.deepEqual(await bg(), ["dark", "rgb(0, 0, 0)"]);
+  assert.deepEqual(await bg(), ["dark", "rgb(11, 13, 14)"]);
   await page.reload();
   await role("heading", { name: "Ajustes" }).waitFor();
-  assert.deepEqual(await bg(), ["dark", "rgb(0, 0, 0)"]);
+  assert.deepEqual(await bg(), ["dark", "rgb(11, 13, 14)"]);
   assert.equal(await role("radio", { name: "Oscuro" }).getAttribute("aria-checked"), "true");
   await page.screenshot({ path: `${SHOTS}/ajustes-oscuro.png` });
   await role("radio", { name: "Claro" }).click();
-  assert.deepEqual(await bg(), ["light", "rgb(242, 242, 247)"]);
+  assert.deepEqual(await bg(), ["light", "rgb(244, 244, 242)"]);
   await role("radio", { name: "Sistema" }).click();
 });
 

@@ -85,7 +85,7 @@ export default async function JuegosPage({ searchParams }) {
         <div className="flex items-start justify-between gap-3">
           <div className="flex flex-col gap-0.5">
             <span className="text-[15px] text-muted">Gastado en juegos</span>
-            <CountUp value={spent} className={`text-[36px] font-bold tracking-tight tabular-nums ${over ? "text-warn" : ""}`} />
+            <CountUp value={spent} className={`font-display text-[36px] font-semibold tracking-tight tabular-nums ${over ? "text-warn" : ""}`} />
           </div>
           {limit != null ? (
             <span className={`shrink-0 rounded-full px-2.5 py-1 text-[13px] font-semibold ${over ? "bg-warn/15 text-warn" : "bg-ok/15 text-ok"}`}>
@@ -106,7 +106,7 @@ export default async function JuegosPage({ searchParams }) {
         {byType.map((t) => (
           <div key={t.name} className="flex flex-col gap-1 rounded-2xl bg-card p-3.5">
             <span className="text-[13px] text-muted">{t.name}</span>
-            <span className="text-xl font-bold tabular-nums">{formatCOP(t.total)}</span>
+            <span className="font-display text-xl font-semibold tabular-nums">{formatCOP(t.total)}</span>
           </div>
         ))}
       </section>

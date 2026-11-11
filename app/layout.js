@@ -1,4 +1,4 @@
-import { Inter } from "next/font/google";
+import { Inter, Space_Grotesk } from "next/font/google";
 import { themeBootScript } from "@/lib/theme";
 import RegisterServiceWorker from "./register-sw";
 import ThemeWatcher from "./theme-watcher";
@@ -6,6 +6,8 @@ import Toaster from "./toaster";
 import "./globals.css";
 
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
+// Titles and big numbers, like the SubTrack extension.
+const grotesk = Space_Grotesk({ variable: "--font-grotesk", subsets: ["latin"], weight: ["500", "600"] });
 
 export const metadata = {
   title: { default: "GastoApp", template: "%s · GastoApp" },
@@ -15,15 +17,15 @@ export const metadata = {
 
 export const viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f2f2f7" },
-    { media: "(prefers-color-scheme: dark)", color: "#000000" },
+    { media: "(prefers-color-scheme: light)", color: "#f4f4f2" },
+    { media: "(prefers-color-scheme: dark)", color: "#0b0d0e" },
   ],
   viewportFit: "cover",
 };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="es" className={`${inter.variable} antialiased`} suppressHydrationWarning>
+    <html lang="es" className={`${inter.variable} ${grotesk.variable} antialiased`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
       </head>

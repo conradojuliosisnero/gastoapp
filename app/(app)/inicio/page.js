@@ -74,7 +74,7 @@ export default async function InicioPage() {
 
       {!current ? (
         <section className="flex flex-col gap-3 rounded-[22px] bg-card p-5">
-          <h2 className="text-xl font-bold tracking-tight">Empieza tu ahorro</h2>
+          <h2 className="font-display text-xl font-semibold tracking-tight">Empieza tu ahorro</h2>
           <p className="text-[15px] text-muted">Agrega tu sueldo mensual y verás cuánto te queda cada mes después de tus gastos, y cuánto llevas ahorrado.</p>
           <Link href="/ahorro/sueldo" className="flex min-h-[52px] items-center justify-center rounded-2xl bg-primary text-[17px] font-semibold text-white transition active:scale-[0.98]">
             Agregar mi sueldo
@@ -110,7 +110,7 @@ export default async function InicioPage() {
             <Progress pct={spentPct} className={current.saved < 0 ? "bg-warn" : "bg-accent"} />
             <div className="flex items-baseline justify-between border-t border-line pt-3">
               <span className="text-base font-semibold">Ahorro del mes</span>
-              <CountUp value={current.saved} className={`text-2xl font-bold tabular-nums ${current.saved < 0 ? "text-warn" : "text-ok"}`} />
+              <CountUp value={current.saved} className={`font-display text-2xl font-semibold tabular-nums ${current.saved < 0 ? "text-warn" : "text-ok"}`} />
             </div>
             {upcoming > 0 && (
               <p className="flex items-center justify-between gap-3 text-[13px] text-muted">
@@ -133,7 +133,7 @@ export default async function InicioPage() {
           <section aria-labelledby="acumulado" className="flex flex-col gap-4 rounded-[22px] bg-card p-5">
             <div className="flex flex-col gap-0.5">
               <h2 id="acumulado" className="text-[15px] text-muted">Ahorro acumulado</h2>
-              <CountUp value={savings.total} className={`text-[36px] font-bold tracking-tight tabular-nums ${savings.total < 0 ? "text-warn" : ""}`} />
+              <CountUp value={savings.total} className={`font-display text-[36px] font-semibold tracking-tight tabular-nums ${savings.total < 0 ? "text-warn" : ""}`} />
               <span className="text-[13px] text-muted">Desde {monthRange(savings.months[0].period).label.toLowerCase()} · incluye lo que llevas de este mes</span>
             </div>
             <SavingsBars

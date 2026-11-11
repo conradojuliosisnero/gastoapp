@@ -85,7 +85,7 @@ export default async function AnualPage({ searchParams }) {
         <section className="flex flex-col gap-4 rounded-[22px] bg-card p-5">
           <div className="flex flex-col gap-0.5">
             <span className="text-[15px] text-muted">Gastado en {year}</span>
-            <CountUp value={total} className="text-[36px] font-bold tracking-tight tabular-nums" />
+            <CountUp value={total} className="font-display text-[36px] font-semibold tracking-tight tabular-nums" />
             <span className="text-[13px] text-muted">
               {monthsElapsed ? `Promedio ${formatCOP(average)} al mes` : "Este año aún no empieza"} · gastos, juegos y compras con tarjeta
             </span>
@@ -94,7 +94,7 @@ export default async function AnualPage({ searchParams }) {
         </section>
 
         <section aria-labelledby="donde" className="flex flex-col gap-2">
-          <h2 id="donde" className="px-1 text-xl font-bold tracking-tight">En qué se va</h2>
+          <h2 id="donde" className="px-1 font-display text-xl font-semibold tracking-tight">En qué se va</h2>
           {categories.length === 0 ? (
             <p className="rounded-2xl bg-card px-4 py-6 text-center text-[15px] text-muted">Sin gastos registrados en {year}.</p>
           ) : (
@@ -116,7 +116,7 @@ export default async function AnualPage({ searchParams }) {
       <div className="flex min-w-0 flex-col gap-5">
         <section aria-labelledby="suscripciones" className="flex flex-col gap-2">
           <div className="flex items-center justify-between px-1">
-            <h2 id="suscripciones" className="text-xl font-bold tracking-tight">Suscripciones</h2>
+            <h2 id="suscripciones" className="font-display text-xl font-semibold tracking-tight">Suscripciones</h2>
             <Link href="/suscripcion" aria-label="Agregar suscripción" className="flex min-h-9 items-center gap-1 rounded-full bg-accent/10 px-3.5 text-[15px] font-semibold text-accent transition active:scale-95">
               <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
               Agregar
@@ -132,7 +132,7 @@ export default async function AnualPage({ searchParams }) {
               <div className="grid grid-cols-2 gap-2.5">
                 <div className="flex flex-col gap-1 rounded-2xl bg-card p-3.5">
                   <span className="text-[13px] text-muted">Al año</span>
-                  <CountUp value={subTotals.year} className="text-xl font-bold tabular-nums" />
+                  <CountUp value={subTotals.year} className="font-display text-xl font-semibold tabular-nums" />
                   <span className="text-[12px] text-muted tabular-nums">≈ {formatCOP(subTotals.month)} al mes</span>
                 </div>
                 <div className="flex flex-col gap-1 rounded-2xl bg-card p-3.5">

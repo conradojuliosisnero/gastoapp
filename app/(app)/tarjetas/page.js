@@ -13,7 +13,7 @@ const Chevron = ({ d }) => (
     <path d={d} />
   </svg>
 );
-const TILE = ["from-[#1d3b8f] to-[#0a66d8]", "from-[#3a3a3c] to-[#1c1c1e]", "from-[#7a1f5c] to-[#c2367b]", "from-[#0f6b55] to-[#1f9d6e]", "from-[#8a4b0a] to-[#d07a17]"];
+const TILE = ["from-[#1d3b8f] to-[#0a66d8]", "from-[#3a3a3c] to-[#1c1c1e]", "from-[#7a1f5c] to-[#c2367b]", "from-[#0f5f58] to-[#0f766e]", "from-[#8a4b0a] to-[#d07a17]"];
 const dayMonth = new Intl.DateTimeFormat("es-CO", { day: "numeric", month: "short", timeZone: "UTC" });
 const fmtDate = (d) => dayMonth.format(new Date(`${d}T00:00:00Z`)).replace(".", "");
 
@@ -29,7 +29,7 @@ export default async function TarjetasPage({ searchParams }) {
       <div className="flex flex-col gap-5">
         <h1 className="sr-only">Tarjetas de crédito</h1>
         <section className="flex flex-col gap-3 rounded-[22px] bg-card p-5 lg:max-w-xl">
-          <h2 className="text-xl font-bold tracking-tight">Tarjetas de crédito</h2>
+          <h2 className="font-display text-xl font-semibold tracking-tight">Tarjetas de crédito</h2>
           <p className="text-[15px] text-muted">
             Agrega tus tarjetas con su día de corte y de pago. Cuando registres un gasto con tarjeta y en cuotas, aquí verás cuánto pagas cada mes y cuánto debes.
           </p>
@@ -80,7 +80,7 @@ export default async function TarjetasPage({ searchParams }) {
       <div className="flex min-w-0 flex-col gap-5">
         <section className="flex flex-col gap-3 rounded-[22px] bg-card p-5">
           <span className="text-[15px] text-muted">A pagar en {month.label.split(" ")[0].toLowerCase()}</span>
-          <CountUp value={dueTotal} className="text-[36px] font-bold tracking-tight tabular-nums" />
+          <CountUp value={dueTotal} className="font-display text-[36px] font-semibold tracking-tight tabular-nums" />
           <div className="flex items-center justify-between border-t border-line pt-3 text-[15px]">
             <span>Deuda pendiente</span>
             <span className="font-semibold tabular-nums">{formatCOP(debt)}</span>
@@ -92,7 +92,7 @@ export default async function TarjetasPage({ searchParams }) {
 
         <section aria-labelledby="mis-tarjetas" className="flex flex-col gap-2">
           <div className="flex items-center justify-between px-1">
-            <h2 id="mis-tarjetas" className="text-xl font-bold tracking-tight">Tus tarjetas</h2>
+            <h2 id="mis-tarjetas" className="font-display text-xl font-semibold tracking-tight">Tus tarjetas</h2>
             <Link href="/tarjetas/tarjeta" aria-label="Agregar tarjeta" className="flex min-h-9 items-center gap-1 rounded-full bg-accent/10 px-3.5 text-[15px] font-semibold text-accent transition active:scale-95">
               <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
               Agregar
@@ -118,7 +118,7 @@ export default async function TarjetasPage({ searchParams }) {
                     </span>
                     <span className="text-right">
                       <span className="block text-[12px] text-white/75">Este mes</span>
-                      <span className="text-xl font-bold tabular-nums">{formatCOP(c.due)}</span>
+                      <span className="font-display text-xl font-semibold tabular-nums">{formatCOP(c.due)}</span>
                     </span>
                   </span>
                 </Link>
@@ -130,7 +130,7 @@ export default async function TarjetasPage({ searchParams }) {
 
       <div className="flex min-w-0 flex-col gap-5">
         <section aria-labelledby="cuotas-mes" className="flex flex-col gap-2">
-          <h2 id="cuotas-mes" className="px-1 text-xl font-bold tracking-tight">Cuotas del mes</h2>
+          <h2 id="cuotas-mes" className="px-1 font-display text-xl font-semibold tracking-tight">Cuotas del mes</h2>
           {due.length === 0 ? (
             <p className="rounded-2xl bg-card px-4 py-6 text-center text-[15px] text-muted">
               Nada que pagar este mes. Para registrar una compra a crédito, toca + y elige la tarjeta en “Medio de pago”.

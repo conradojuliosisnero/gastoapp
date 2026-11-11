@@ -40,8 +40,8 @@ export default async function ModulesSummary({ supabase }) {
   }
 
   const rows = [
-    { href: "/gastos", key: "gastos", label: "Gastos", detail: `${formatCOP(totals.gastos)} · ${counts.gastos} ${counts.gastos === 1 ? "movimiento" : "movimientos"}`, color: "bg-[#1f7a3a]" },
-    { href: "/internet", key: "internet", label: "Internet compartido", detail: internet, color: "bg-primary" },
+    { href: "/gastos", key: "gastos", label: "Gastos", detail: `${formatCOP(totals.gastos)} · ${counts.gastos} ${counts.gastos === 1 ? "movimiento" : "movimientos"}`, color: "bg-primary" },
+    { href: "/internet", key: "internet", label: "Internet compartido", detail: internet, color: "bg-[#2563eb]" },
     {
       href: "/tarjetas",
       key: "tarjetas",
@@ -50,7 +50,7 @@ export default async function ModulesSummary({ supabase }) {
       color: "bg-[#5e35b1]",
     },
     { href: "/juegos", key: "juegos", label: "Videojuegos", detail: `${formatCOP(totals.juegos)} este mes`, color: "bg-[#b4530a]" },
-    { href: "/anual", key: "anual", label: "Resumen del año", detail: "Gasto anual y suscripciones", color: "bg-[#0f6b55]" },
+    { href: "/anual", key: "anual", label: "Resumen del año", detail: "Gasto anual y suscripciones", color: "bg-[#475569]" },
   ];
 
   return (

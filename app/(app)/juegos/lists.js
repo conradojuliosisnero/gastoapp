@@ -46,7 +46,7 @@ export function Purchases({ items }) {
     <section aria-labelledby="compras" className="flex flex-col gap-3">
       {dialog}
       <div className="flex items-center justify-between gap-3 px-1">
-        <h2 id="compras" className="text-xl font-bold tracking-tight">Compras</h2>
+        <h2 id="compras" className="font-display text-xl font-semibold tracking-tight">Compras</h2>
         <div role="radiogroup" aria-label="Plataforma" className="grid grid-cols-4 gap-0.5 rounded-[10px] bg-segment p-0.5">
           {PLATFORMS.map((p) => (
             <button
@@ -110,7 +110,7 @@ export function Wishlist({ items }) {
     <section aria-labelledby="deseos" className="flex flex-col gap-3">
       {dialog}
       <div className="flex items-center justify-between px-1">
-        <h2 id="deseos" className="text-xl font-bold tracking-tight">Lista de deseos</h2>
+        <h2 id="deseos" className="font-display text-xl font-semibold tracking-tight">Lista de deseos</h2>
         <Link href="/juegos/deseo" aria-label="Agregar a la lista de deseos" className="flex min-h-9 items-center gap-1 rounded-full bg-accent/10 px-3.5 text-[15px] font-semibold text-accent transition active:scale-95">
           <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
           Agregar

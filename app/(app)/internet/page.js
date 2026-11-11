@@ -37,7 +37,7 @@ export default async function InternetPage({ searchParams }) {
       <div className="flex flex-col gap-5">
         <h1 className="sr-only">Internet compartido</h1>
         <section className="flex flex-col gap-3 rounded-[22px] bg-card p-5">
-          <h2 className="text-xl font-bold tracking-tight">Internet compartido</h2>
+          <h2 className="font-display text-xl font-semibold tracking-tight">Internet compartido</h2>
           <p className="text-[15px] text-muted">Registra tu plan, con quién lo compartes y cuánto pone cada uno. Luego marcas quién ya pagó cada mes.</p>
           <Link href="/internet/plan" className="flex min-h-[52px] items-center justify-center rounded-2xl bg-primary text-[17px] font-semibold text-white transition active:scale-[0.98]">
             Configurar plan
@@ -79,7 +79,7 @@ export default async function InternetPage({ searchParams }) {
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 flex-col gap-0.5">
             <span className="truncate text-[15px] text-muted">{plan.name}</span>
-            <CountUp value={plan.amount} className="text-[36px] font-bold tracking-tight tabular-nums" />
+            <CountUp value={plan.amount} className="font-display text-[36px] font-semibold tracking-tight tabular-nums" />
           </div>
           <span className={`shrink-0 rounded-full px-2.5 py-1 text-[13px] font-semibold ${overdue ? "bg-warn/15 text-warn" : "bg-accent/12 text-accent"}`}>
             {overdue ? "Venció" : "Vence"} {dayMonth.format(new Date(`${due}T00:00:00Z`))}

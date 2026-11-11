@@ -2,6 +2,7 @@
 
 @theme inline {
   --font-sans: var(--font-inter), -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-display: var(--font-grotesk), var(--font-inter), system-ui, sans-serif;
 
   --color-bg: var(--bg);
   --color-card: var(--card);
@@ -23,49 +24,52 @@
   --color-credit: var(--credit);
 }
 
-/* Colores del diseño (estilo iOS). `accent` es para texto e íconos; `primary` es el relleno de botones con texto blanco. */
+/* Paleta SubTrack (compartida con la extensión). `accent` es para texto e íconos; `primary` es el relleno de botones con texto blanco.
+   ok es verde hierba y no verde azulado, para no confundirlo con el acento. */
 :root {
   color-scheme: light;
-  --bg: #f2f2f7;
+  --bg: #f4f4f2;
   --card: #ffffff;
-  --ink: #1c1c1e;
-  --ink-2: #3a3a3c;
-  --muted: #6e6e73;
-  --line: #e5e5ea;
-  --segment: #e3e3e8;
-  --fill: #eeeef0;
-  --accent: #0a66d8;
-  --primary: #0a66d8;
-  --ok: #1f7a3a;
-  --warn: #b4530a;
-  --danger: #d70015;
-  --glass: rgb(255 255 255 / 0.62);
-  --glass-edge: rgb(255 255 255 / 0.8);
-  --field: #eaf2fd;
-  --switch: #d1d1d6;
+  --ink: #16181d;
+  --ink-2: #3a404b;
+  --muted: #5b6270;
+  --line: #e6e7e9;
+  --segment: #eef0f2;
+  --fill: #eef0f2;
+  --accent: #0f766e;
+  --primary: #0f766e;
+  --ok: #2f7d32;
+  --warn: #9a3412;
+  --danger: #b42318;
+  --glass: rgb(251 251 250 / 0.66);
+  --glass-edge: rgb(255 255 255 / 0.85);
+  --field: #e3f4f1;
+  --switch: #d4d6da;
   --credit: #5e35b1;
 }
 
 /* data-theme is set before paint by the script in app/layout.js (system, light or dark). */
+/* La extensión no tiene modo oscuro: mismo tono, acento más claro para contrastar (textos ≥ 4.5:1, barras ≥ 3:1).
+   primary se mantiene oscuro para que el texto blanco de los botones conserve 5.5:1. */
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --bg: #000000;
-  --card: #1c1c1e;
-  --ink: #f5f5f7;
-  --ink-2: #d1d1d6;
-  --muted: #98989d;
-  --line: #38383a;
-  --segment: #2c2c2e;
-  --fill: #2c2c2e;
-  --accent: #4da3ff;
-  --primary: #0a66d8;
-  --ok: #30d158;
-  --warn: #ffa340;
-  --danger: #ff6961;
-  --glass: rgb(28 28 30 / 0.62);
-  --glass-edge: rgb(255 255 255 / 0.12);
-  --field: rgb(77 163 255 / 0.16);
-  --switch: #39393d;
+  --bg: #0b0d0e;
+  --card: #17191c;
+  --ink: #eef0f1;
+  --ink-2: #c9cdd2;
+  --muted: #969ca6;
+  --line: #2a2e33;
+  --segment: #23272b;
+  --fill: #23272b;
+  --accent: #2dd4bf;
+  --primary: #0f766e;
+  --ok: #8fd14f;
+  --warn: #fdba74;
+  --danger: #f87171;
+  --glass: rgb(23 25 28 / 0.66);
+  --glass-edge: rgb(255 255 255 / 0.1);
+  --field: rgb(45 212 191 / 0.14);
+  --switch: #3a4045;
   --credit: #b39ddb;
 }
 

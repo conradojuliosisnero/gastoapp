@@ -24,7 +24,7 @@ export function SaveBar({ pending, label = "Guardar", disabled = false }) {
         <button
           type="submit"
           disabled={pending || disabled}
-          className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl bg-primary text-[17px] font-semibold text-white shadow-[0_8px_20px_rgba(10,102,216,0.3)] transition active:scale-[0.98] disabled:opacity-60 disabled:shadow-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl bg-primary text-[17px] font-semibold text-white shadow-[0_8px_20px_rgba(15,118,110,0.3)] transition active:scale-[0.98] disabled:opacity-60 disabled:shadow-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
           {pending && <Spinner className="size-5" />}
           {pending ? "Guardando…" : label}
