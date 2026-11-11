@@ -190,7 +190,7 @@ Todas las tablas tienen RLS "solo el dueño" y `user_id default auth.uid()`. Los
 
    El repo, el proyecto de Vercel y el dominio siguen como `gastoapp`, a menos que el usuario pida cambiarlos.
 2. **Rediseñar la plantilla del correo y organizar mejor la información:**
-   - qué hay: `getAlerts` ya devuelve, por cada aviso, `group` (pagos | presupuestos | internet), `name`, `meta` y `amount`. Este cambio está **sin commit** en `lib/alerts.js`.
+   - qué hay: `getAlerts` ya devuelve, por cada aviso, `group` (pagos | presupuestos | internet), `name`, `meta` y `amount`. Este cambio ya está en `main` (`lib/alerts.js`).
    - qué falta: reescribir `digest()` en `lib/reminders.js` con HTML de correo basado en tablas y estilos inline:
      - encabezado con la marca y la fecha;
      - tarjeta de resumen con el total por pagar en 7 días;
