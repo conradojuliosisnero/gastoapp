@@ -37,7 +37,7 @@ export default function InstallCard({ variant = "banner" }) {
   else if (state.canPrompt)
     body = (
       <button type="button" onClick={install} className="flex min-h-11 items-center justify-center rounded-xl bg-primary px-4 text-[15px] font-semibold text-white transition active:scale-[0.98]">
-        Instalar GastoApp
+        Instalar Subtrack
       </button>
     );
   else if (state.isIOS)
@@ -53,7 +53,7 @@ export default function InstallCard({ variant = "banner" }) {
       <div className="flex items-start gap-3">
         <Image src="/icons/icon-192.png" alt="" width={44} height={44} className="rounded-[12px]" />
         <div className="flex flex-1 flex-col">
-          <span className="text-base font-semibold">Instala GastoApp</span>
+          <span className="text-base font-semibold">Instala Subtrack</span>
           <span className="text-[13px] text-muted">Ábrela desde tu pantalla de inicio, a pantalla completa y sin conexión.</span>
         </div>
         {banner && (

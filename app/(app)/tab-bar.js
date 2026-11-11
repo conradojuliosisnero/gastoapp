@@ -50,7 +50,7 @@ export default function TabBar() {
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col gap-6 border-r border-line bg-card/70 px-4 py-6 backdrop-blur-xl lg:flex">
       <Link href="/inicio" className="flex items-center gap-3 rounded-xl px-2 py-1 focus-visible:outline-2 focus-visible:outline-accent">
         <Image src="/icons/icon-192.png" alt="" width={36} height={36} className="rounded-[10px] shadow-sm" />
-        <span className="font-display text-[19px] font-semibold tracking-tight">GastoApp</span>
+        <span className="font-display text-[19px] font-semibold tracking-tight">Subtrack</span>
       </Link>
       <Link
         href={fab.href}

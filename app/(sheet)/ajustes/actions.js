@@ -49,11 +49,11 @@ export async function setEmailReminders(on) {
 async function testPayload(supabase) {
   return (
     digest(await getAlerts(supabase), appUrl()) ?? {
-      title: "GastoApp: prueba de recordatorios",
+      title: "Subtrack: prueba de recordatorios",
       body: "Todo en orden. Así te llegarán los avisos de pagos y presupuestos.",
       url: "/notificaciones",
       text: "Así te llegarán los avisos de pagos y presupuestos.",
-      html: "<p>Así te llegarán los avisos de pagos y presupuestos de GastoApp.</p>",
+      html: "<p>Así te llegarán los avisos de pagos y presupuestos de Subtrack.</p>",
     }
   );
 }

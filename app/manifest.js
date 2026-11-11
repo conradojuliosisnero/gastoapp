@@ -1,7 +1,7 @@
 export default function manifest() {
   return {
-    name: "GastoApp",
-    short_name: "GastoApp",
+    name: "Subtrack",
+    short_name: "Subtrack",
     description: "Gastos mensuales, internet compartido y gastos en videojuegos.",
     lang: "es",
     start_url: "/inicio",

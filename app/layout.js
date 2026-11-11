@@ -10,9 +10,9 @@ const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
 const grotesk = Space_Grotesk({ variable: "--font-grotesk", subsets: ["latin"], weight: ["500", "600"] });
 
 export const metadata = {
-  title: { default: "GastoApp", template: "%s · GastoApp" },
+  title: { default: "Subtrack", template: "%s · Subtrack" },
   description: "Gastos mensuales, internet compartido y gastos en videojuegos.",
-  appleWebApp: { capable: true, title: "GastoApp", statusBarStyle: "default" },
+  appleWebApp: { capable: true, title: "Subtrack", statusBarStyle: "default" },
 };
 
 export const viewport = {

@@ -43,7 +43,7 @@ self.addEventListener("fetch", (event) => {
 self.addEventListener("push", (event) => {
   const data = event.data ? event.data.json() : {};
   event.waitUntil(
-    self.registration.showNotification(data.title || "GastoApp", {
+    self.registration.showNotification(data.title || "Subtrack", {
       body: data.body,
       icon: "/icons/icon-192.png",
       badge: "/icons/icon-192.png",
