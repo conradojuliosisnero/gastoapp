@@ -12,6 +12,9 @@ export default function CategoriesSheet({ rows }) {
   const overCount = rows.filter((r) => r.over).length;
   const withSpend = rows.filter((r) => r.spent > 0).length;
 
+  // Next keeps this screen mounted (hidden) when you navigate away; come back with the sheet closed.
+  useEffect(() => () => setOpen(false), []);
+
   useEffect(() => {
     const dialog = ref.current;
     if (!open) {
@@ -85,6 +88,7 @@ export default function CategoriesSheet({ rows }) {
             <div className="px-4 pt-3 pb-[max(16px,env(safe-area-inset-bottom))]">
               <Link
                 href="/gastos/presupuesto"
+                onClick={() => setOpen(false)}
                 className="flex min-h-[52px] items-center justify-center rounded-2xl bg-primary text-[17px] font-semibold text-white transition active:scale-[0.98]"
               >
                 Ajustar presupuestos
