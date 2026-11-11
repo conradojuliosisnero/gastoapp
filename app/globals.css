@@ -1,26 +1,24 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-inter), -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Colores del diseño en Claude Design (estilo iOS, modo claro). */
+@theme {
+  --color-bg: #f2f2f7;
+  --color-card: #ffffff;
+  --color-ink: #1c1c1e;
+  --color-muted: #6e6e73;
+  --color-line: #e5e5ea;
+  --color-segment: #e3e3e8;
+  --color-accent: #0a66d8;
+  --color-ok: #1f7a3a;
+  --color-warn: #b4530a;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  -webkit-tap-highlight-color: transparent;
 }
