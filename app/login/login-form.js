@@ -55,7 +55,7 @@ export default function LoginForm() {
       <p aria-live="polite" className="min-h-5 px-1 text-sm">
         {state?.error && <span className="text-warn">{state.error}</span>}
         {state?.message && <span className="text-ok">{state.message}</span>}
-        {!state && confirmFailed && <span className="text-warn">El enlace de confirmación no es válido o ya expiró.</span>}
+        {!state && confirmFailed && <span className="text-warn">Ese enlace ya se usó o expiró. Si ya confirmaste tu cuenta, inicia sesión.</span>}
       </p>
 
       <button
