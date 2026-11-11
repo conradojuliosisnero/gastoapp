@@ -266,6 +266,51 @@ await step("crear categoría propia desde Nuevo gasto y borrarla", async () => {
   await text(label).waitFor({ state: "detached" });
 });
 
+await step("internet: configurar plan entre 3 y marcar pagos", async () => {
+  await role("link", { name: "Internet" }).click();
+  await role("link", { name: "Configurar plan" }).click();
+  await role("heading", { name: "Plan de internet" }).waitFor();
+  await v(page.getByRole("textbox", { name: "Nombre", exact: true })).fill("Internet e2e");
+  await v(page.getByPlaceholder("$0")).fill("120000");
+  await v(page.getByLabel("Nombre del integrante 2")).fill("Cliente A");
+  await v(page.getByLabel("Nombre del integrante 3")).fill("Cliente B");
+  assert.equal(await v(page.getByText(/^\$\s40\.000$/)).count(), 3, "partes iguales de 40.000");
+  await role("button", { name: "Guardar plan" }).click();
+  await toastSays("Plan guardado");
+  await text("0 de 3 pagaron").waitFor();
+
+  await role("button", { name: "Marcar pago de Cliente A", exact: true }).click();
+  await toastSays("Cliente A: pago registrado");
+  await text("1 de 3 pagaron").waitFor();
+  await text(/Recaudado \$\s40\.000/).waitFor();
+
+  await role("button", { name: "Marcar pago de tu parte", exact: true }).click();
+  await toastSays("Tu parte: pago registrado");
+  await role("link", { name: "Gastos" }).click();
+  await text("Internet · Internet e2e (tu parte)").waitFor();
+
+  await role("link", { name: "Internet" }).click();
+  await role("button", { name: "Desmarcar pago de tu parte", exact: true }).click();
+  await confirmModal("Desmarcar");
+  await toastSays("Tu parte: pago desmarcado");
+  await text("1 de 3 pagaron").waitFor();
+  await role("link", { name: "Gastos" }).click();
+  await role("heading", { name: "Movimientos" }).waitFor();
+  assert.equal(await text("Internet · Internet e2e (tu parte)").count(), 0, "tu parte desmarcada sale de gastos");
+
+  await role("link", { name: "Internet" }).click();
+  await role("link", { name: "Editar plan" }).click();
+  await role("radio", { name: "Personalizado" }).click();
+  await v(page.getByLabel(/^Parte de /)).nth(0).fill("50000");
+  await v(page.getByLabel(/^Parte de /)).nth(1).fill("35000");
+  await v(page.getByLabel(/^Parte de /)).nth(2).fill("35000");
+  await text(/Suman \$\s120\.000 de \$\s120\.000/).waitFor();
+  await role("button", { name: "Guardar plan" }).click();
+  await toastSays("Plan guardado");
+  await text("Partes personalizadas").waitFor();
+  await text(/\$\s35\.000 · Pagado/).waitFor();
+});
+
 await step("sin errores de JavaScript en el navegador", async () => {
   assert.deepEqual(errors, []);
 });
