@@ -63,7 +63,7 @@ export default function NewExpenseForm({ categories: initialCategories, defaultD
         />
       </label>
 
-      <fieldset className="flex flex-col gap-2">
+      <fieldset className="flex min-w-0 flex-col gap-2">
         <legend className="mb-2 px-1 text-[13px] font-semibold uppercase tracking-wide text-muted">Categoría</legend>
         <div className="flex flex-wrap gap-2">
           {categories.map((c) => (

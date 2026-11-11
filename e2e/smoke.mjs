@@ -204,6 +204,12 @@ await step("pago futuro: etiqueta y no cuenta como gastado", async () => {
   const summary = await v(page.locator("section").filter({ hasText: "Gastado en el mes" })).innerText();
   assert.match(summary, /Gastado en el mes\s+\$\s0\b/, "el pago futuro no debe sumar a lo gastado");
 
+  await role("link", { name: /Notificaciones, \d+ pendiente/ }).click();
+  await role("heading", { name: "Notificaciones" }).waitFor();
+  await v(page.getByRole("link", { name: new RegExp(label) })).getByText(/Pago el/).waitFor();
+  await page.goBack();
+  await text(label).waitFor();
+
   if (sameMonth) {
     await role("link", { name: "Inicio" }).click();
     await text(/Pagos futuros este mes: −\$\s77\.000/).waitFor();
@@ -211,6 +217,26 @@ await step("pago futuro: etiqueta y no cuenta como gastado", async () => {
   }
   await role("button", { name: `Borrar ${label}` }).click();
   await confirmModal("Borrar");
+  await text(label).waitFor({ state: "detached" });
+});
+
+await step("ingreso extra suma al ahorro y se puede borrar", async () => {
+  const label = `${unique} venta`;
+  await page.goto(`${BASE_URL}/inicio`);
+  const savedBefore = await v(page.locator("section").filter({ hasText: "Ahorro del mes" })).innerText();
+  await role("link", { name: "Agregar ingreso extra" }).click();
+  await role("heading", { name: "Ingreso extra" }).waitFor();
+  await v(page.getByPlaceholder("$0")).fill("200000");
+  await v(page.getByPlaceholder(/Venta, regalo/)).fill(label);
+  await role("button", { name: "Guardar ingreso" }).click();
+  await toastSays("Ingreso extra guardado");
+  await text(label).waitFor();
+  await text(/\+\$\s200\.000/).first().waitFor();
+  const savedAfter = await v(page.locator("section").filter({ hasText: "Ahorro del mes" })).innerText();
+  assert.notEqual(savedAfter, savedBefore, "el ahorro del mes debe cambiar");
+  await role("button", { name: `Borrar ingreso ${label}` }).click();
+  await confirmModal("Borrar");
+  await toastSays("Ingreso borrado");
   await text(label).waitFor({ state: "detached" });
 });
 

@@ -5,7 +5,7 @@ import { computeSavings } from "@/lib/ahorro";
 import { formatCOP, maskCOP, monthRange, today } from "@/lib/money";
 import { isUpcoming } from "@/lib/gastos";
 import InstallCard from "@/app/install-card";
-import { SalaryValue, SavingsBars } from "./savings-widgets";
+import { ExtraList, SalaryValue, SavingsBars } from "./savings-widgets";
 
 export const metadata = { title: "Inicio" };
 
@@ -27,8 +27,7 @@ export default async function InicioPage() {
   const supabase = await createClient();
   const month = monthRange();
 
-  const [{ data: claims }, incomeRows] = await Promise.all([
-    supabase.auth.getClaims(),
+  const [incomeRows] = await Promise.all([
     selectAll(() => supabase.from("incomes").select("period, amount_enc, created_at").order("period")),
   ]);
   const incomes = incomeRows.map((r) => ({ period: r.period, amount: Number(decrypt(r.amount_enc)) }));
@@ -38,31 +37,39 @@ export default async function InicioPage() {
     : null;
 
   // shortcut: decrypts every expense since the first salary to add them up; store monthly totals if history grows into the tens of thousands.
-  const expenseRows = incomes.length
-    ? await selectAll(() => supabase.from("transactions").select("occurred_on, amount_enc").gte("occurred_on", `${startPeriod}-01`).lt("occurred_on", month.end))
-    : [];
+  const [expenseRows, extraRows] = incomes.length
+    ? await Promise.all([
+        selectAll(() => supabase.from("transactions").select("occurred_on, amount_enc").gte("occurred_on", `${startPeriod}-01`).lt("occurred_on", month.end)),
+        selectAll(() =>
+          supabase.from("extra_incomes").select("id, received_on, amount_enc, description_enc").gte("received_on", `${startPeriod}-01`).lt("received_on", month.end).order("received_on", { ascending: false })
+        ),
+      ])
+    : [[], []];
   const todayDate = today();
   const expenses = expenseRows.map((r) => ({ date: r.occurred_on, amount: Number(decrypt(r.amount_enc)) }));
   // Future-dated payments don't reduce savings until their day comes.
-  const savings = computeSavings({ incomes, expenses: expenses.filter((e) => !isUpcoming(e.date, todayDate)), currentPeriod: month.key, startPeriod });
+  const extras = extraRows.map((r) => ({
+    id: r.id,
+    date: r.received_on,
+    amount: Number(decrypt(r.amount_enc)),
+    description: r.description_enc ? decrypt(r.description_enc) : null,
+  }));
+  const savings = computeSavings({
+    incomes,
+    expenses: expenses.filter((e) => !isUpcoming(e.date, todayDate)),
+    extras: extras.filter((e) => !isUpcoming(e.date, todayDate)),
+    currentPeriod: month.key,
+    startPeriod,
+  });
+  const monthExtras = extras.filter((e) => e.date >= month.start);
   const upcoming = expenses.filter((e) => isUpcoming(e.date, todayDate)).reduce((sum, e) => sum + e.amount, 0);
   const current = savings.current;
-  const spentPct = current?.income ? Math.min(100, Math.round((current.spent / current.income) * 100)) : 0;
+  const available = current ? current.income + current.extra : 0;
+  const spentPct = available ? Math.min(100, Math.round((current.spent / available) * 100)) : 0;
 
   return (
     <div className="flex flex-col gap-5">
-      <header className="flex items-end justify-between px-1">
-        <div className="min-w-0">
-          <p className="truncate text-[13px] font-semibold uppercase tracking-wide text-muted">{claims?.claims?.email}</p>
-          <h1 className="text-[34px] font-bold tracking-tight">Resumen</h1>
-        </div>
-        <Link href="/ajustes" aria-label="Ajustes" className="flex size-11 shrink-0 items-center justify-center rounded-full bg-card text-ink-2 transition active:scale-90">
-          <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="3" />
-            <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" />
-          </svg>
-        </Link>
-      </header>
+      <h1 className="sr-only">Resumen</h1>
 
       <InstallCard />
 
@@ -88,6 +95,15 @@ export default async function InicioPage() {
               <SalaryValue masked={maskCOP(current.income)} />
             </div>
             <div className="flex items-center justify-between text-base">
+              <span className="flex items-center gap-2">
+                Ingresos extra
+                <Link href="/ahorro/extra" aria-label="Agregar ingreso extra" className="flex size-7 items-center justify-center rounded-full bg-ok/15 text-ok transition active:scale-90">
+                  <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
+                </Link>
+              </span>
+              <span className="font-semibold tabular-nums text-ok">+{formatCOP(current.extra)}</span>
+            </div>
+            <div className="flex items-center justify-between text-base">
               <span>Gastado</span>
               <span className="font-semibold tabular-nums">{formatCOP(current.spent)}</span>
             </div>
@@ -107,6 +123,8 @@ export default async function InicioPage() {
               </p>
             )}
           </section>
+
+          {monthExtras.length > 0 && <ExtraList items={monthExtras} />}
 
           <section aria-labelledby="acumulado" className="flex flex-col gap-4 rounded-[22px] bg-card p-5">
             <div className="flex flex-col gap-0.5">

@@ -66,7 +66,7 @@ export default async function GastosPage({ searchParams }) {
   return (
     <div className="flex flex-col gap-5">
       <header className="flex flex-col gap-1 px-1">
-        <h1 className="text-[34px] font-bold tracking-tight">Gastos</h1>
+        <h1 className="sr-only">Gastos</h1>
         <nav aria-label="Mes" className="flex items-center justify-between">
           <Link href={`/gastos?mes=${month.prev}`} aria-label="Mes anterior" className="flex size-11 items-center justify-center rounded-full text-accent transition active:scale-90 active:bg-accent/10">
             <Chevron d="m15 6-6 6 6 6" />
