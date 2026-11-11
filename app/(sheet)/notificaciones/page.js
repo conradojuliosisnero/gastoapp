@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getAlerts } from "@/lib/alerts";
+import { SheetHeader } from "../sheet-header";
 
 export const metadata = { title: "Notificaciones" };
 
@@ -15,18 +16,12 @@ export default async function NotificacionesPage() {
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="grid grid-cols-[1fr_auto_1fr] items-center">
-        <Link href="/inicio" className="flex min-h-11 items-center gap-0.5 justify-self-start text-[17px] text-accent transition active:opacity-60">
-          <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 6-6 6 6 6" /></svg>
-          Volver
-        </Link>
-        <h1 className="text-[17px] font-semibold">Notificaciones</h1>
-      </div>
+      <SheetHeader title="Notificaciones" cancelHref="/inicio" cancelLabel="Volver" back />
 
       {alerts.length === 0 ? (
         <p className="rounded-2xl bg-card px-4 py-8 text-center text-[15px] text-muted">Todo en orden. No tienes pagos en los próximos 7 días ni presupuestos excedidos.</p>
       ) : (
-        <ul className="overflow-hidden rounded-2xl bg-card">
+        <ul className="overflow-hidden rounded-2xl bg-card ring-1 ring-line/70">
           {alerts.map((a) => (
             <li key={a.id} className="border-t border-line first:border-t-0">
               <Link href={a.href} className="flex items-start gap-3 px-4 py-3 active:bg-fill">
@@ -43,12 +38,13 @@ export default async function NotificacionesPage() {
         </ul>
       )}
 
-      <section className="flex flex-col gap-1 rounded-2xl bg-card p-4">
-        <h2 className="text-base font-semibold">Avisos en el teléfono</h2>
-        <p className="text-[14px] text-muted">
-          Pronto podrás recibir estos avisos como notificación push y por correo, aunque no tengas la app abierta (fase de recordatorios).
-        </p>
-      </section>
+      <Link href="/ajustes" className="flex items-center gap-3 rounded-2xl bg-card p-4 ring-1 ring-line/70 transition active:bg-fill">
+        <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <span className="text-base font-semibold">Recibir avisos en el teléfono y por correo</span>
+          <span className="text-[14px] text-muted">Actívalos en Ajustes › Recordatorios. Llegan cada mañana aunque no abras la app.</span>
+        </span>
+        <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-muted"><path d="m9 6 6 6-6 6" /></svg>
+      </Link>
     </div>
   );
 }

@@ -1,42 +1,56 @@
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { pushConfigured } from "@/lib/push";
+import { emailConfigured } from "@/lib/email";
 import InstallCard from "@/app/install-card";
+import { Section } from "@/app/form-kit";
+import { SheetHeader } from "../sheet-header";
 import { AppearancePicker, SignOutButton } from "./controls";
+import Reminders from "./reminders";
 
 export const metadata = { title: "Ajustes" };
 
 export default async function AjustesPage() {
   const supabase = await createClient();
-  const { data } = await supabase.auth.getClaims();
+  const [{ data }, { data: prefs }] = await Promise.all([
+    supabase.auth.getClaims(),
+    supabase.from("notification_prefs").select("email").maybeSingle(),
+  ]);
+  const email = data?.claims?.email ?? "";
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="grid grid-cols-[1fr_auto_1fr] items-center">
-        <Link href="/inicio" className="flex min-h-11 items-center gap-0.5 justify-self-start text-[17px] text-accent transition active:opacity-60">
-          <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 6-6 6 6 6" /></svg>
-          Inicio
-        </Link>
-        <h1 className="text-[17px] font-semibold">Ajustes</h1>
+      <SheetHeader title="Ajustes" cancelHref="/inicio" cancelLabel="Inicio" back />
+
+      <div className="flex items-center gap-3 rounded-2xl bg-card p-4 ring-1 ring-line/70">
+        <span aria-hidden="true" className="flex size-12 shrink-0 items-center justify-center rounded-full bg-primary text-lg font-semibold text-white">
+          {email.split("@")[0].replace(/[^a-zA-Z]/g, "").slice(0, 2).toUpperCase() || "?"}
+        </span>
+        <span className="flex min-w-0 flex-col">
+          <span className="text-[13px] text-muted">Tu cuenta</span>
+          <span className="truncate text-base font-semibold">{email}</span>
+        </span>
       </div>
 
-      <section className="flex flex-col gap-2">
-        <h2 className="px-1 text-[13px] font-semibold uppercase tracking-wide text-muted">Apariencia</h2>
-        <AppearancePicker />
-      </section>
+      <Reminders
+        vapidKey={process.env.VAPID_PUBLIC_KEY ?? ""}
+        pushReady={pushConfigured()}
+        emailReady={emailConfigured()}
+        emailOn={Boolean(prefs?.email)}
+        address={email}
+      />
 
-      <section className="flex flex-col gap-2">
-        <h2 className="px-1 text-[13px] font-semibold uppercase tracking-wide text-muted">App</h2>
+      <Section title="Apariencia" className="p-2">
+        <AppearancePicker />
+      </Section>
+
+      <section className="flex flex-col gap-1.5">
+        <h2 className="px-4 text-[13px] font-semibold uppercase tracking-wide text-muted">App</h2>
         <InstallCard variant="row" />
       </section>
 
-      <section className="flex flex-col gap-2">
-        <h2 className="px-1 text-[13px] font-semibold uppercase tracking-wide text-muted">Cuenta</h2>
-        <div className="overflow-hidden rounded-2xl bg-card">
-          <p className="truncate px-4 py-3 text-base">{data?.claims?.email}</p>
-          <div className="ml-4 h-px bg-line" />
-          <SignOutButton />
-        </div>
-      </section>
+      <Section>
+        <SignOutButton />
+      </Section>
     </div>
   );
 }

@@ -103,14 +103,14 @@ export function Segmented({ label, name, options, value, onChange, compact = fal
   );
 }
 
-export function SwitchField({ label, hint, name, checked, defaultChecked, onChange }) {
+export function SwitchField({ label, hint, name, checked, defaultChecked, onChange, disabled = false }) {
   return (
-    <label className="flex min-h-[52px] cursor-pointer items-center justify-between gap-3 px-4 py-2 transition-colors focus-within:bg-fill/60">
+    <label className={`flex min-h-[52px] items-center justify-between gap-3 px-4 py-2 transition-colors focus-within:bg-fill/60 ${disabled ? "opacity-60" : "cursor-pointer"}`}>
       <span className="flex flex-col">
         <span className="text-[15px] font-medium">{label}</span>
         {hint && <span className="text-[13px] text-muted">{hint}</span>}
       </span>
-      <input name={name} type="checkbox" role="switch" checked={checked} defaultChecked={defaultChecked} onChange={onChange} className="peer sr-only" />
+      <input name={name} type="checkbox" role="switch" checked={checked} defaultChecked={defaultChecked} onChange={onChange} disabled={disabled} className="peer sr-only" />
       <span aria-hidden="true" className="flex h-[31px] w-[51px] shrink-0 items-center rounded-full bg-switch p-0.5 transition-colors peer-checked:bg-ok peer-checked:*:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-accent">
         <span className="size-[27px] rounded-full bg-white shadow transition-transform duration-300 ease-[cubic-bezier(0.3,1.3,0.5,1)]" />
       </span>

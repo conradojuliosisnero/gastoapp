@@ -2,10 +2,10 @@ import { decrypt } from "@/lib/crypto";
 import { computeShares } from "@/lib/internet";
 
 // The user's internet plan with decrypted members and their current share, or null if not set up.
-export async function getPlan(supabase) {
-  const { data: plan, error } = await supabase
-    .from("internet_plans")
-    .select("id, name, amount_enc, due_day, split_mode, internet_members(id, name_enc, share_enc, is_me, sort)")
+// `userId` is for service-role callers (the reminders cron); RLS scopes normal requests.
+export async function getPlan(supabase, userId = null) {
+  const q = supabase.from("internet_plans").select("id, name, amount_enc, due_day, split_mode, internet_members(id, name_enc, share_enc, is_me, sort)");
+  const { data: plan, error } = await (userId ? q.eq("user_id", userId) : q)
     .order("created_at")
     .limit(1)
     .maybeSingle();
