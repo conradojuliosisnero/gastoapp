@@ -100,6 +100,34 @@ await step("borrar el gasto", async () => {
   await text(unique).waitFor({ state: "detached" });
 });
 
+await step("copiar gastos fijos del mes anterior", async () => {
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Bogota" }).format(new Date());
+  const [y, m] = today.split("-").map(Number);
+  const prev = new Date(Date.UTC(y, m - 2, 15)).toISOString().slice(0, 10);
+  const fixed = `${unique} fijo`;
+
+  await page.goto(`${BASE_URL}/gastos/nuevo`);
+  await v(page.getByPlaceholder("$0")).fill("30000");
+  await v(page.getByPlaceholder("Ej. Mercado")).fill(fixed);
+  await v(page.locator('input[name="date"]')).fill(prev);
+  await text("Gasto fijo (se repite cada mes)").click();
+  await role("button", { name: "Guardar" }).click();
+  await page.waitForURL(new RegExp(`mes=${prev.slice(0, 7)}`));
+  await text(fixed).waitFor();
+
+  await role("link", { name: "Mes siguiente" }).click();
+  await role("button", { name: "Copiarlos" }).click();
+  await text(fixed).waitFor();
+  assert.equal(await role("button", { name: "Copiarlos" }).count(), 0);
+
+  // Clean up both copies.
+  await role("button", { name: `Borrar ${fixed}` }).click();
+  await text(fixed).waitFor({ state: "detached" });
+  await role("link", { name: "Mes anterior" }).click();
+  await role("button", { name: `Borrar ${fixed}` }).click();
+  await text(fixed).waitFor({ state: "detached" });
+});
+
 await step("sin errores de JavaScript en el navegador", async () => {
   assert.deepEqual(errors, []);
 });
