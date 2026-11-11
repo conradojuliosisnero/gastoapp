@@ -144,6 +144,8 @@ await step("copiar gastos fijos del mes anterior", async () => {
   await text(fixed).waitFor();
 
   await role("link", { name: "Mes siguiente" }).click();
+  await page.waitForURL(new RegExp(`mes=${today.slice(0, 7)}`));
+  await page.waitForLoadState("networkidle");
   await role("button", { name: "Copiarlos" }).click();
   await toastSays("1 gasto fijo copiado");
   await text(fixed).waitFor();
