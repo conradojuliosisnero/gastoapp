@@ -9,6 +9,7 @@ const ICON = {
   gastos: <><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z" /><path d="M9 8h6" /><path d="M9 12h6" /></>,
   internet: <><path d="M5 12.5a10 10 0 0 1 14 0" /><path d="M8.5 16a5 5 0 0 1 7 0" /><path d="M2 9a15 15 0 0 1 20 0" /><circle cx="12" cy="19.5" r="1" /></>,
   tarjetas: <><rect x="2.5" y="5" width="19" height="14" rx="2.5" /><path d="M2.5 10h19" /><path d="M6.5 15h4" /></>,
+  anual: <><rect x="3" y="4.5" width="18" height="16" rx="2.5" /><path d="M3 9.5h18" /><path d="M8 3v3" /><path d="M16 3v3" /><path d="M8 14h3" /></>,
   juegos: <path d="M7 8h10a4 4 0 0 1 4 4v1.5a3 3 0 0 1-5.4 1.8L14.5 14h-5l-1.1 1.3A3 3 0 0 1 3 13.5V12a4 4 0 0 1 4-4z" />,
 };
 
@@ -49,6 +50,7 @@ export default async function ModulesSummary({ supabase }) {
       color: "bg-[#5e35b1]",
     },
     { href: "/juegos", key: "juegos", label: "Videojuegos", detail: `${formatCOP(totals.juegos)} este mes`, color: "bg-[#b4530a]" },
+    { href: "/anual", key: "anual", label: "Resumen del año", detail: "Gasto anual y suscripciones", color: "bg-[#0f6b55]" },
   ];
 
   return (

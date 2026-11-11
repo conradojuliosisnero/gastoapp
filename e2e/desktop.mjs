@@ -57,6 +57,13 @@ for (const [tab, check] of [
   });
 }
 
+await step("resumen del año en escritorio", async () => {
+  await v(page.getByRole("link", { name: "Resumen del año" })).click();
+  await page.getByRole("heading", { name: "Suscripciones" }).waitFor();
+  await page.waitForTimeout(1200);
+  await page.screenshot({ path: `${SHOTS}/desk-anual.png`, fullPage: true });
+});
+
 await step("hoja como panel centrado", async () => {
   await v(page.getByRole("link", { name: "Nuevo gasto" })).click();
   await page.getByRole("heading", { name: "Nuevo gasto" }).waitFor();

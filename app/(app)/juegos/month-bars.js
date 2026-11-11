@@ -9,7 +9,7 @@ gsap.registerPlugin(useGSAP);
 const HEIGHT = 112;
 
 // Six months of game spending; bars over the monthly limit turn orange, with a dashed line at the limit.
-export default function MonthBars({ bars, limit }) {
+export default function MonthBars({ bars, limit, label = "Gasto en juegos por mes" }) {
   const ref = useRef(null);
   const max = Math.max(1, limit ?? 0, ...bars.map((b) => b.total));
   const limitY = limit != null ? Math.round((limit / max) * HEIGHT) : null;
@@ -24,11 +24,11 @@ export default function MonthBars({ bars, limit }) {
   );
 
   return (
-    <div ref={ref} role="img" aria-label={`Gasto en juegos por mes: ${bars.map((b) => `${b.label} ${b.text}`).join(", ")}`} className="relative">
+    <div ref={ref} role="img" aria-label={`${label}: ${bars.map((b) => `${b.label} ${b.text}`).join(", ")}`} className="relative">
       {limitY != null && (
         <div aria-hidden="true" className="absolute inset-x-0 border-t-[1.5px] border-dashed border-warn" style={{ bottom: `${limitY + 22}px` }} />
       )}
-      <div aria-hidden="true" className="grid grid-cols-6 items-end gap-2" style={{ height: HEIGHT + 22 }}>
+      <div aria-hidden="true" className="grid items-end gap-1.5" style={{ height: HEIGHT + 22, gridTemplateColumns: `repeat(${bars.length}, minmax(0, 1fr))` }}>
         {bars.map((b) => (
           <div key={b.period} className="flex h-full flex-col items-center justify-end gap-1.5">
             <div className={`bar w-full rounded-md ${b.over ? "bg-warn" : "bg-accent"}`} style={{ height: `${Math.max(3, Math.round((b.total / max) * HEIGHT))}px` }} />

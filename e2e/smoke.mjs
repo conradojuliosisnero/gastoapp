@@ -456,6 +456,32 @@ await step("tarjeta de crédito: compra en 3 cuotas y lo que hay que pagar", asy
   await role("heading", { name: "Tarjetas de crédito" }).waitFor();
 });
 
+await step("resumen del año y suscripciones: conviene el plan anual", async () => {
+  const name = `Plus ${unique.slice(-5)}`;
+  await tab("Inicio").click();
+  await role("link", { name: /^Resumen del año/ }).click();
+  await page.waitForURL(/\/anual/);
+  await text(/Gastado en \d{4}/).waitFor();
+  await role("link", { name: "Agregar suscripción" }).click();
+  await role("heading", { name: "Nueva suscripción" }).waitFor();
+  await v(page.getByRole("textbox", { name: "Nombre" })).fill(name);
+  await v(page.getByRole("textbox", { name: /Precio mensual/ })).fill("30000");
+  await v(page.getByRole("textbox", { name: /Plan anual/ })).fill("300000");
+  await text(/El plan anual te ahorra \$\s60\.000 al año \(17%\)/).waitFor();
+  await role("button", { name: "Agregar suscripción" }).click();
+  await toastSays(`"${name}" agregada`);
+  const row = v(page.getByRole("link", { name: `Editar ${name}` }));
+  await row.getByText(/Conviene el plan anual: ahorras \$\s60\.000 \(17%\)/).waitFor();
+  await row.getByText(/\$\s360\.000/).waitFor();
+  await page.screenshot({ path: `${SHOTS}/anual.png`, fullPage: true });
+  await row.click();
+  await role("heading", { name: "Editar suscripción" }).waitFor();
+  await role("button", { name: "Borrar suscripción" }).click();
+  await confirmModal("Borrar");
+  await toastSays("Suscripción borrada");
+  await text(name).waitFor({ state: "detached" });
+});
+
 await step("inicio resume los tres módulos", async () => {
   await tab("Inicio").click();
   await role("link", { name: /^Gastos .*movimiento/ }).waitFor();

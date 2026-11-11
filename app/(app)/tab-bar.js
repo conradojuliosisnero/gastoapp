@@ -77,6 +77,14 @@ export default function TabBar() {
           ))}
         </ul>
       </nav>
+      <Link
+        href="/anual"
+        aria-current={pathname.startsWith("/anual") ? "page" : undefined}
+        className="-mt-4 flex min-h-11 items-center gap-3 rounded-xl px-3 text-[15px] font-medium text-ink-2 transition-colors hover:bg-fill aria-[current=page]:bg-accent/12 aria-[current=page]:font-semibold aria-[current=page]:text-accent"
+      >
+        <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><><rect x="3" y="4.5" width="18" height="16" rx="2.5" /><path d="M3 9.5h18" /><path d="M8 3v3" /><path d="M16 3v3" /><path d="M8 14h3" /></></svg>
+        Resumen del año
+      </Link>
     </aside>
     <div className="fixed inset-x-0 bottom-[max(16px,env(safe-area-inset-bottom))] z-20 mx-auto flex w-[calc(100%-32px)] max-w-[416px] items-center gap-3 lg:hidden">
     <nav ref={nav} aria-label="Navegación principal" className="flex-1">

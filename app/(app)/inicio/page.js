@@ -6,6 +6,7 @@ import { computeSavings } from "@/lib/ahorro";
 import { formatCOP, maskCOP, monthRange, today } from "@/lib/money";
 import { isUpcoming } from "@/lib/gastos";
 import { getCredit } from "@/lib/cards";
+import { selectAll } from "@/lib/select-all";
 import InstallCard from "@/app/install-card";
 import { ExtraList, SalaryValue, SavingsBars } from "./savings-widgets";
 import ModulesSummary from "./modules-summary";
@@ -13,18 +14,6 @@ import CountUp from "@/app/count-up";
 import Progress from "@/app/progress";
 
 export const metadata = { title: "Inicio" };
-
-const PAGE = 1000; // Supabase's default max rows per request.
-
-async function selectAll(makeQuery) {
-  const rows = [];
-  for (let from = 0; ; from += PAGE) {
-    const { data, error } = await makeQuery().range(from, from + PAGE - 1);
-    if (error) throw error;
-    rows.push(...data);
-    if (data.length < PAGE) return rows;
-  }
-}
 
 const shortMonth = (period) => new Intl.DateTimeFormat("es-CO", { month: "short", timeZone: "UTC" }).format(new Date(`${period}-01T00:00:00Z`)).replace(".", "");
 
