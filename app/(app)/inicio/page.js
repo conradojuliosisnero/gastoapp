@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { decrypt } from "@/lib/crypto";
@@ -6,6 +7,7 @@ import { formatCOP, maskCOP, monthRange, today } from "@/lib/money";
 import { isUpcoming } from "@/lib/gastos";
 import InstallCard from "@/app/install-card";
 import { ExtraList, SalaryValue, SavingsBars } from "./savings-widgets";
+import ModulesSummary from "./modules-summary";
 
 export const metadata = { title: "Inicio" };
 
@@ -138,6 +140,10 @@ export default async function InicioPage() {
           </section>
         </>
       )}
+
+      <Suspense fallback={<div aria-hidden="true" className="h-[188px] animate-pulse rounded-2xl bg-card" />}>
+        <ModulesSummary supabase={supabase} />
+      </Suspense>
     </div>
   );
 }

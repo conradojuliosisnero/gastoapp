@@ -8,5 +8,5 @@ export const metadata = { title: "Nuevo gasto" };
 export default async function NuevoGastoPage() {
   const supabase = await createClient();
   const categories = await getCategories(supabase, "gastos");
-  return <NewExpenseForm key={categories.map((c) => c.id).join()} categories={categories.map(({ id, name }) => ({ id, name }))} defaultDate={today()} />;
+  return <NewExpenseForm categories={categories.map(({ id, name }) => ({ id, name }))} defaultDate={today()} />;
 }

@@ -7,5 +7,5 @@ export const metadata = { title: "Categorías" };
 export default async function PresupuestoPage() {
   const supabase = await createClient();
   const categories = await getCategories(supabase, "gastos");
-  return <BudgetForm key={categories.map((c) => `${c.id}:${c.budget ?? ""}`).join()} categories={categories} />;
+  return <BudgetForm categories={categories} />;
 }

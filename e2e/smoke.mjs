@@ -364,6 +364,14 @@ await step("videojuegos: límite, compra por plataforma y lista de deseos", asyn
   await toastSays("Quitado de la lista");
 });
 
+await step("inicio resume los tres módulos", async () => {
+  await role("link", { name: "Inicio" }).click();
+  await role("link", { name: /^Gastos .*movimiento/ }).waitFor();
+  await role("link", { name: /^Internet compartido Pagaron \d+ de 3/ }).waitFor();
+  await role("link", { name: /^Videojuegos .* este mes/ }).click();
+  await page.waitForURL(/\/juegos/);
+});
+
 await step("sin errores de JavaScript en el navegador", async () => {
   assert.deepEqual(errors, []);
 });
