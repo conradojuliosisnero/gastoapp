@@ -473,7 +473,7 @@ await step("tarjeta de crédito: compra en 3 cuotas y lo que hay que pagar", asy
   await role("button", { name: "Borrar tarjeta" }).click();
   await confirmModal("Borrar");
   await toastSays("Tarjeta borrada");
-  await role("heading", { name: "Tarjetas de crédito" }).waitFor();
+  await role("heading", { name: "Tarjetas de crédito", level: 2 }).waitFor();
 });
 
 await step("resumen del año y suscripciones: conviene el plan anual", async () => {
