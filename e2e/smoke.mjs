@@ -15,6 +15,11 @@ const errors = [];
 page.on("pageerror", (e) => errors.push(e.message));
 page.on("dialog", (d) => d.accept());
 
+// Next keeps previous screens mounted but hidden (instant back navigation), so only look at what is visible.
+const v = (locator) => locator.filter({ visible: true });
+const text = (t, opts) => v(page.getByText(t, opts));
+const role = (r, opts) => v(page.getByRole(r, opts));
+
 const step = async (name, fn) => {
   try {
     await fn();
@@ -26,78 +31,73 @@ const step = async (name, fn) => {
     process.exit(1);
   }
 };
-const shot = (name) => page.screenshot({ path: `${SHOTS}/${name}.png`, fullPage: true });
 const unique = `Prueba e2e ${Date.now().toString().slice(-5)}`;
 
 await step("sin sesión redirige a login", async () => {
   await page.goto(`${BASE_URL}/gastos`);
   await page.waitForURL(/\/login/);
-  await shot("01-login");
 });
 
 await step("iniciar sesión", async () => {
-  await page.getByPlaceholder("tu@correo.com").fill(E2E_EMAIL);
-  await page.getByPlaceholder("Mínimo 8 caracteres").fill(E2E_PASSWORD);
-  await page.getByRole("button", { name: "Entrar" }).click();
+  await v(page.getByPlaceholder("tu@correo.com")).fill(E2E_EMAIL);
+  await v(page.getByPlaceholder("Mínimo 8 caracteres")).fill(E2E_PASSWORD);
+  await role("button", { name: "Entrar" }).click();
   await page.waitForURL(/\/inicio/);
-  await page.getByRole("heading", { name: "Resumen" }).waitFor();
+  await role("heading", { name: "Resumen" }).waitFor();
 });
 
 await step("pantalla Gastos con categorías por defecto", async () => {
-  await page.getByRole("link", { name: "Gastos" }).click();
-  await page.waitForURL(/\/gastos/);
-  await page.getByRole("heading", { name: "Por categoría" }).waitFor();
-  await page.getByText("Comida", { exact: true }).waitFor();
-  await shot("02-gastos-vacio");
+  await role("link", { name: "Gastos" }).click();
+  await role("heading", { name: "Por categoría" }).waitFor();
+  await text("Comida", { exact: true }).waitFor();
 });
 
 await step("crear gasto fijo desde el botón +", async () => {
-  await page.getByRole("link", { name: "Agregar gasto" }).click();
-  await page.getByRole("heading", { name: "Nuevo gasto" }).waitFor();
-  await page.getByPlaceholder("$0").fill("45000");
-  assert.equal(await page.getByPlaceholder("$0").inputValue(), "$45.000");
-  await page.getByRole("radio", { name: "Comida" }).check({ force: true });
-  await page.getByPlaceholder("Ej. Mercado").fill(unique);
-  await page.getByText("Gasto fijo (se repite cada mes)").click();
-  await shot("03-nuevo-gasto");
-  await page.getByRole("button", { name: "Guardar" }).click();
+  await role("link", { name: "Agregar gasto" }).click();
+  await role("heading", { name: "Nuevo gasto" }).waitFor();
+  const amount = v(page.getByPlaceholder("$0"));
+  await amount.fill("45000");
+  assert.equal(await amount.inputValue(), "$45.000");
+  await text("Comida", { exact: true }).click();
+  await v(page.getByPlaceholder("Ej. Mercado")).fill(unique);
+  await text("Gasto fijo (se repite cada mes)").click();
+  await role("button", { name: "Guardar" }).click();
   await page.waitForURL(/\/gastos\?mes=/);
-  await page.getByText(unique).waitFor();
-  assert.match(await page.locator("main, body").first().innerText(), /45\.000/);
+  await text(unique).waitFor();
+  await text(/45\.000/).first().waitFor();
 });
 
 await step("validación: monto vacío muestra error", async () => {
   await page.goto(`${BASE_URL}/gastos/nuevo`);
-  await page.getByPlaceholder("$0").fill("");
-  await page.getByPlaceholder("$0").evaluate((el) => el.removeAttribute("required"));
-  await page.getByRole("button", { name: "Guardar" }).click();
-  await page.getByText("Escribe el monto.").waitFor();
-  await page.getByRole("link", { name: "Cancelar" }).click();
-  await page.waitForURL(/\/gastos$/);
+  const amount = v(page.getByPlaceholder("$0"));
+  await amount.evaluate((el) => el.removeAttribute("required"));
+  await role("button", { name: "Guardar" }).click();
+  await text("Escribe el monto.").waitFor();
+  await role("link", { name: "Cancelar" }).click();
+  await role("heading", { name: "Por categoría" }).waitFor();
 });
 
 await step("definir presupuesto y ver el resumen", async () => {
-  await page.getByRole("link", { name: "Ajustar" }).click();
-  await page.getByRole("heading", { name: "Presupuestos" }).waitFor();
-  await page.getByLabel("Comida").fill("40000");
-  await page.getByRole("button", { name: "Guardar" }).click();
-  await page.waitForURL(/\/gastos$/);
-  await page.getByText(/Te pasaste/).waitFor();
-  await page.getByText(/Excedido por/).waitFor();
-  await shot("04-gastos-con-datos");
+  await role("link", { name: "Ajustar" }).click();
+  await role("heading", { name: "Presupuestos" }).waitFor();
+  await v(page.getByLabel("Comida")).fill("40000");
+  await role("button", { name: "Guardar" }).click();
+  await text(/Te pasaste/).waitFor();
+  await text(/Excedido por/).waitFor();
+  await page.screenshot({ path: `${SHOTS}/gastos.png` });
 });
 
 await step("filtros fijos / variables", async () => {
-  await page.getByRole("button", { name: "Variables" }).click();
-  await page.getByText("No hay movimientos con este filtro.").waitFor();
-  await page.getByRole("button", { name: "Fijos" }).click();
-  await page.getByText(unique).waitFor();
-  await page.getByRole("button", { name: "Todos" }).click();
+  await role("button", { name: "Variables" }).click();
+  await text("No hay movimientos con este filtro.").waitFor();
+  await role("button", { name: "Fijos" }).click();
+  await text(unique).waitFor();
+  await role("button", { name: "Todos" }).click();
 });
 
 await step("borrar el gasto", async () => {
-  await page.getByRole("button", { name: `Borrar ${unique}` }).click();
-  await page.getByText(unique).waitFor({ state: "detached" });
+  await role("button", { name: `Borrar ${unique}` }).click();
+  await text(unique).waitFor({ state: "detached" });
 });
 
 await step("sin errores de JavaScript en el navegador", async () => {
@@ -105,8 +105,8 @@ await step("sin errores de JavaScript en el navegador", async () => {
 });
 
 await step("cerrar sesión", async () => {
-  await page.getByRole("link", { name: "Inicio" }).click();
-  await page.getByRole("button", { name: "Salir" }).click();
+  await role("link", { name: "Inicio" }).click();
+  await role("button", { name: "Salir" }).click();
   await page.waitForURL(/\/login/);
 });
 
