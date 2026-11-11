@@ -29,18 +29,22 @@ export default async function InicioPage() {
 
   const [{ data: claims }, incomeRows] = await Promise.all([
     supabase.auth.getClaims(),
-    selectAll(() => supabase.from("incomes").select("period, amount_enc").order("period")),
+    selectAll(() => supabase.from("incomes").select("period, amount_enc, created_at").order("period")),
   ]);
   const incomes = incomeRows.map((r) => ({ period: r.period, amount: Number(decrypt(r.amount_enc)) }));
+  // Savings start the month the first salary was registered, not the "desde" month chosen for it.
+  const startPeriod = incomeRows.length
+    ? new Intl.DateTimeFormat("en-CA", { timeZone: "America/Bogota" }).format(new Date(incomeRows.map((r) => r.created_at).sort()[0])).slice(0, 7)
+    : null;
 
   // shortcut: decrypts every expense since the first salary to add them up; store monthly totals if history grows into the tens of thousands.
   const expenseRows = incomes.length
-    ? await selectAll(() => supabase.from("transactions").select("occurred_on, amount_enc").gte("occurred_on", `${incomes[0].period}-01`).lt("occurred_on", month.end))
+    ? await selectAll(() => supabase.from("transactions").select("occurred_on, amount_enc").gte("occurred_on", `${startPeriod}-01`).lt("occurred_on", month.end))
     : [];
   const todayDate = today();
   const expenses = expenseRows.map((r) => ({ date: r.occurred_on, amount: Number(decrypt(r.amount_enc)) }));
   // Future-dated payments don't reduce savings until their day comes.
-  const savings = computeSavings({ incomes, expenses: expenses.filter((e) => !isUpcoming(e.date, todayDate)), currentPeriod: month.key });
+  const savings = computeSavings({ incomes, expenses: expenses.filter((e) => !isUpcoming(e.date, todayDate)), currentPeriod: month.key, startPeriod });
   const upcoming = expenses.filter((e) => isUpcoming(e.date, todayDate)).reduce((sum, e) => sum + e.amount, 0);
   const current = savings.current;
   const spentPct = current?.income ? Math.min(100, Math.round((current.spent / current.income) * 100)) : 0;

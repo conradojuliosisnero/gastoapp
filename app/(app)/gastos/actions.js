@@ -104,3 +104,31 @@ export async function saveBudgets(_prev, formData) {
   refresh();
   return { ok: true };
 }
+
+const categoryName = z.string().trim().min(1, "Escribe un nombre.").max(40, "Máximo 40 caracteres.");
+
+export async function createCategory(name) {
+  const parsed = categoryName.safeParse(name);
+  if (!parsed.success) return { error: parsed.error.issues[0].message };
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("categories")
+    .insert({ module: "gastos", name: parsed.data, sort: 100 })
+    .select("id, name")
+    .single();
+  if (error?.code === "23505") return { error: `Ya tienes una categoría "${parsed.data}".` };
+  if (error) return { error: "No se pudo crear la categoría." };
+  refresh();
+  return { ok: true, category: data };
+}
+
+// Its expenses stay, marked "Sin categoría" (the FK sets category_id to null).
+export async function deleteCategory(id) {
+  if (!z.uuid().safeParse(id).success) return { error: "Categoría inválida." };
+  const supabase = await createClient();
+  const { error } = await supabase.from("categories").delete().eq("id", id);
+  if (error) return { error: "No se pudo borrar la categoría." };
+  refresh();
+  return { ok: true };
+}

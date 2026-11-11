@@ -5,6 +5,7 @@ import { getCategories } from "@/lib/categories";
 import { isUpcoming, summarize } from "@/lib/gastos";
 import { formatCOP, monthRange, today } from "@/lib/money";
 import Movements, { CopyFixedButton } from "./movements";
+import CategoriesSheet from "./categories-sheet";
 
 export const metadata = { title: "Gastos" };
 
@@ -106,31 +107,7 @@ export default async function GastosPage({ searchParams }) {
         )}
       </section>
 
-      <section className="flex flex-col gap-2">
-        <div className="flex items-baseline justify-between px-1">
-          <h2 className="text-xl font-bold tracking-tight">Por categoría</h2>
-          <Link href="/gastos/presupuesto" className="flex min-h-9 items-center rounded-full bg-accent/10 px-3.5 text-[15px] font-semibold text-accent transition active:scale-95">Ajustar</Link>
-        </div>
-        <ul className="overflow-hidden rounded-2xl bg-card">
-          {summary.rows.map((c) => (
-            <li key={c.id} className="flex flex-col gap-2 border-t border-line px-4 py-3 first:border-t-0">
-              <div className="flex items-baseline justify-between gap-3">
-                <span className="text-base font-medium">{c.name}</span>
-                <span className={`text-sm font-semibold ${c.over ? "text-warn" : ""}`}>
-                  {formatCOP(c.spent)}
-                  {c.budget != null && <span className="font-normal text-muted"> / {formatCOP(c.budget)}</span>}
-                </span>
-              </div>
-              {c.budget != null && (
-                <div className="h-1.5 overflow-hidden rounded-full bg-line">
-                  <div className={`h-1.5 rounded-full ${c.over ? "bg-warn" : "bg-accent"}`} style={{ width: `${Math.min(100, Math.round((c.spent / c.budget) * 100))}%` }} />
-                </div>
-              )}
-              {c.over && <span className="text-xs font-semibold text-warn">Excedido por {formatCOP(c.spent - c.budget)}</span>}
-            </li>
-          ))}
-        </ul>
-      </section>
+      <CategoriesSheet rows={summary.rows} />
 
       <section className="flex flex-col gap-3">
         <h2 className="px-1 text-xl font-bold tracking-tight">Movimientos</h2>

@@ -56,8 +56,11 @@ await step("iniciar sesión", async () => {
 
 await step("pantalla Gastos con categorías por defecto", async () => {
   await role("link", { name: "Gastos" }).click();
-  await role("heading", { name: "Por categoría" }).waitFor();
-  await text("Comida", { exact: true }).waitFor();
+  await role("heading", { name: "Movimientos" }).waitFor();
+  await role("button", { name: /Por categoría/ }).click();
+  await role("dialog").getByText("Comida", { exact: true }).waitFor();
+  await role("button", { name: "Listo" }).click();
+  await role("dialog").waitFor({ state: "detached" });
 });
 
 await step("crear gasto fijo desde el botón +", async () => {
@@ -83,17 +86,20 @@ await step("validación: monto vacío muestra error", async () => {
   await role("button", { name: "Guardar gasto" }).click();
   await text("Escribe el monto.").first().waitFor();
   await role("link", { name: "Cancelar" }).click();
-  await role("heading", { name: "Por categoría" }).waitFor();
+  await role("heading", { name: "Movimientos" }).waitFor();
 });
 
 await step("definir presupuesto y ver el resumen", async () => {
-  await role("link", { name: "Ajustar" }).click();
-  await role("heading", { name: "Presupuestos" }).waitFor();
-  await v(page.getByLabel("Comida")).fill("40000");
+  await role("button", { name: /Por categoría/ }).click();
+  await role("link", { name: "Ajustar presupuestos" }).click();
+  await role("heading", { name: "Categorías" }).waitFor();
+  await v(page.getByLabel("Comida", { exact: true })).fill("40000");
   await role("button", { name: "Guardar presupuestos" }).click();
   await toastSays("Presupuestos guardados");
   await text(/Te pasaste/).waitFor();
-  await text(/Excedido por/).waitFor();
+  await role("button", { name: /1 excedida/ }).click();
+  await role("dialog").getByText(/Excedido por/).waitFor();
+  await role("button", { name: "Listo" }).click();
   await page.screenshot({ path: `${SHOTS}/gastos.png` });
 });
 
@@ -203,6 +209,32 @@ await step("pago futuro: etiqueta y no cuenta como gastado", async () => {
     await text(/Pagos futuros este mes: −\$\s77\.000/).waitFor();
     await role("link", { name: "Gastos" }).click();
   }
+  await role("button", { name: `Borrar ${label}` }).click();
+  await confirmModal("Borrar");
+  await text(label).waitFor({ state: "detached" });
+});
+
+await step("crear categoría propia desde Nuevo gasto y borrarla", async () => {
+  const cat = `Mascotas ${unique.slice(-5)}`;
+  const label = `${unique} mascota`;
+  await page.goto(`${BASE_URL}/gastos/nuevo`);
+  await v(page.getByPlaceholder("$0")).fill("15000");
+  await role("button", { name: "Nueva" }).click();
+  await v(page.getByLabel("Nombre de la nueva categoría")).fill(cat);
+  await role("button", { name: "Crear" }).click();
+  await toastSays(`Categoría "${cat}" creada`);
+  assert.equal(await page.getByRole("radio", { name: cat }).isChecked(), true);
+  await v(page.getByPlaceholder("Ej. Mercado")).fill(label);
+  await role("button", { name: "Guardar gasto" }).click();
+  await text(label).waitFor();
+  await v(page.getByRole("listitem").filter({ hasText: label })).getByText(cat).waitFor();
+
+  await page.goto(`${BASE_URL}/gastos/presupuesto`);
+  await role("button", { name: `Borrar categoría ${cat}` }).click();
+  await confirmModal("Borrar");
+  await toastSays(`Categoría "${cat}" borrada`);
+  await page.goto(`${BASE_URL}/gastos`);
+  await v(page.getByRole("listitem").filter({ hasText: label })).getByText("Sin categoría").waitFor();
   await role("button", { name: `Borrar ${label}` }).click();
   await confirmModal("Borrar");
   await text(label).waitFor({ state: "detached" });

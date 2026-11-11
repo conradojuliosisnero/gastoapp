@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCategories } from "@/lib/categories";
 import BudgetForm from "./form";
 
-export const metadata = { title: "Presupuestos" };
+export const metadata = { title: "Categorías" };
 
 export default async function PresupuestoPage() {
   const supabase = await createClient();

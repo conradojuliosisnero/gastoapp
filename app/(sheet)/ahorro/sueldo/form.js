@@ -73,7 +73,7 @@ export default function SalaryForm({ defaultPeriod }) {
         </label>
       </div>
       <p className="px-1 text-[13px] text-muted">
-        Se guarda cifrado y en pantalla se muestra oculto. Aplica desde ese mes en adelante hasta que lo cambies.
+        Se guarda cifrado y en pantalla se muestra oculto. Aplica desde ese mes hasta que lo cambies; el ahorro se cuenta desde el mes en que empiezas a registrarlo aquí.
       </p>
 
       <p aria-live="polite" className="min-h-5 px-1 text-sm text-danger">{state?.error}</p>
