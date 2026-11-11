@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { getAlerts } from "@/lib/alerts";
+import { getAlerts, withReadState } from "@/lib/alerts";
 
 const shell = "sticky top-0 z-30 -mx-4 mb-4 flex items-center justify-between lg:-mx-10 lg:mb-6 lg:flex-row-reverse lg:justify-start lg:gap-3 lg:px-10 lg:pt-5 border-b border-transparent bg-bg/80 px-4 pt-[max(12px,env(safe-area-inset-top))] pb-3 lg:pt-5 backdrop-blur-xl backdrop-saturate-[1.8]";
 
@@ -22,10 +22,10 @@ export function AppHeaderSkeleton() {
 
 export default async function AppHeader() {
   const supabase = await createClient();
-  const [{ data }, alerts] = await Promise.all([supabase.auth.getClaims(), getAlerts(supabase)]);
+  const [{ data }, alerts] = await Promise.all([supabase.auth.getClaims(), getAlerts(supabase).then((a) => withReadState(supabase, a))]);
   const email = data?.claims?.email ?? "";
   const initials = email.split("@")[0].replace(/[^a-zA-Z]/g, "").slice(0, 2).toUpperCase() || "?";
-  const count = alerts.length;
+  const count = alerts.filter((a) => !a.read).length; // only new ones
 
   return (
     <header className={shell}>
@@ -38,7 +38,7 @@ export default async function AppHeader() {
       </Link>
       <Link
         href="/notificaciones"
-        aria-label={count ? `Notificaciones, ${count} ${count === 1 ? "pendiente" : "pendientes"}` : "Notificaciones"}
+        aria-label={count ? `Notificaciones, ${count} ${count === 1 ? "nueva" : "nuevas"}` : "Notificaciones"}
         className="relative flex size-10 items-center justify-center rounded-full bg-card text-ink-2 shadow-sm transition active:scale-90"
       >
         <Bell />

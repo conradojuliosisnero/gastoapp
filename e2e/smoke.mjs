@@ -230,9 +230,16 @@ await step("pago futuro: etiqueta y no cuenta como gastado", async () => {
   const summary = await v(page.locator("section").filter({ hasText: "Gastado en el mes" })).innerText();
   assert.match(summary, /Gastado en el mes\s+\$\s0\b/, "el pago futuro no debe sumar a lo gastado");
 
-  await role("link", { name: /Notificaciones, \d+ pendiente/ }).click();
+  await role("link", { name: /Notificaciones, \d+ nuevas?/ }).click();
   await role("heading", { name: "Notificaciones" }).waitFor();
   await v(page.getByRole("link", { name: new RegExp(label) })).getByText(/Pago el/).waitFor();
+  await text("Nueva", { exact: true }).first().waitFor();
+  await page.goBack();
+  // Once seen, the bell stops counting them; on the next visit they show as read.
+  await role("link", { name: "Notificaciones", exact: true }).waitFor();
+  await role("link", { name: "Notificaciones", exact: true }).click();
+  await role("heading", { name: "Leídas" }).waitFor();
+  assert.equal(await text("Nueva", { exact: true }).count(), 0);
   await page.goBack();
   await text(label).waitFor();
 
@@ -374,7 +381,7 @@ await step("videojuegos: límite, compra por plataforma y lista de deseos", asyn
   await toastSays("Agregado a tu lista de deseos");
   await text("¡Llegó a tu precio!").waitFor();
 
-  await role("link", { name: /Notificaciones, \d+ pendiente/ }).click();
+  await role("link", { name: /Notificaciones, \d+ nuevas?/ }).click();
   await text("Te pasaste del límite de juegos").waitFor();
   await page.goBack();
 
