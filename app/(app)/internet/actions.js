@@ -58,8 +58,10 @@ export async function savePlan(_prev, formData) {
     : await supabase.from("internet_plans").insert(planRow).select("id").single();
   if (error) return { error: "No se pudo guardar el plan." };
 
-  const keepIds = p.members.map((m) => m.id).filter(Boolean);
-  const removed = (existing?.members ?? []).filter((m) => !keepIds.includes(m.id)).map((m) => m.id);
+  // Only members the user explicitly removed are deleted (their payment history goes with them).
+  const requested = String(formData.get("removed") ?? "").split(",").filter(Boolean);
+  const keepIds = new Set(p.members.map((m) => m.id).filter(Boolean));
+  const removed = (existing?.members ?? []).map((m) => m.id).filter((id) => requested.includes(id) && !keepIds.has(id));
   if (removed.length) {
     const { error: delError } = await supabase.from("internet_members").delete().in("id", removed);
     if (delError) return { error: "No se pudo quitar a un integrante." };

@@ -19,6 +19,7 @@ export default function PlanForm({ plan }) {
   const [confirm, dialog] = useConfirm();
   const [amount, setAmount] = useState(plan?.amount ?? null);
   const [splitMode, setSplitMode] = useState(plan?.splitMode ?? "equal");
+  const [removedIds, setRemovedIds] = useState([]);
   const [members, setMembers] = useState(
     plan ? plan.members.map((m) => ({ key: m.id, id: m.id, name: m.name, share: m.share })) : [blank("Yo"), blank(), blank()]
   );
@@ -47,6 +48,7 @@ export default function PlanForm({ plan }) {
       });
       if (!ok) return;
     }
+    if (m.id) setRemovedIds((ids) => [...ids, m.id]);
     setMembers((list) => list.filter((x) => x.key !== m.key));
   }
 
@@ -106,6 +108,7 @@ export default function PlanForm({ plan }) {
       <div className="flex flex-col gap-2">
         <span className="px-1 text-[13px] font-semibold uppercase tracking-wide text-muted">Integrantes</span>
         <input type="hidden" name="memberCount" value={members.length} />
+        <input type="hidden" name="removed" value={removedIds.join(",")} />
         <ul className="overflow-hidden rounded-2xl bg-card">
           {members.map((m, i) => (
             <li key={m.key} className="flex min-h-12 items-center gap-2 border-t border-line pr-1 pl-4 first:border-t-0">

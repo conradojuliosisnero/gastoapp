@@ -14,6 +14,8 @@ const newTransaction = z.object({
   description: z.string().trim().max(80, "La descripción es muy larga."),
   date: z.iso.date("Fecha inválida."),
   kind: z.enum(["fijo", "variable"]),
+  module: z.enum(["gastos", "juegos"]),
+  platform: z.enum(["PS5", "PC", "Otra"]).nullable(),
 });
 
 export async function createTransaction(_prev, formData) {
@@ -23,13 +25,16 @@ export async function createTransaction(_prev, formData) {
     description: formData.get("description") ?? "",
     date: formData.get("date"),
     kind: formData.get("fijo") ? "fijo" : "variable",
+    module: formData.get("module") || "gastos",
+    platform: formData.get("platform") || null,
   });
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
-  const { amount, categoryId, description, date, kind } = parsed.data;
+  const { amount, categoryId, description, date, kind, module, platform } = parsed.data;
   const supabase = await createClient();
   const { error } = await supabase.from("transactions").insert({
-    module: "gastos",
+    module,
+    platform: module === "juegos" ? platform : null,
     category_id: categoryId,
     occurred_on: date,
     kind,
@@ -39,7 +44,7 @@ export async function createTransaction(_prev, formData) {
   if (error) return { error: "No se pudo guardar. Intenta de nuevo." };
 
   refresh();
-  return { ok: true, mes: date.slice(0, 7) };
+  return { ok: true, mes: date.slice(0, 7), module };
 }
 
 export async function deleteTransaction(id) {

@@ -33,6 +33,7 @@ export default function NewExpenseForm({ categories: initialCategories, defaultD
   const [state, formAction, pending] = useActionState(async (prev, formData) => {
     const result = await createTransaction(prev, formData);
     if (result.ok) {
+      setAmount(""); // the form stays mounted (hidden) after leaving; start clean next time
       toast("Gasto guardado");
       router.push(`/gastos?mes=${result.mes}`);
     } else {

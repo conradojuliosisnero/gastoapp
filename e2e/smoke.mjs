@@ -77,6 +77,12 @@ await step("crear gasto fijo desde el botón +", async () => {
   await page.waitForURL(/\/gastos\?mes=/);
   await text(unique).waitFor();
   await text(/45\.000/).first().waitFor();
+  // Reopening the form must start empty (Next keeps visited screens in memory).
+  await role("link", { name: "Agregar gasto" }).click();
+  await role("heading", { name: "Nuevo gasto" }).waitFor();
+  assert.equal(await v(page.getByPlaceholder("$0")).inputValue(), "", "el formulario debe abrir vacío");
+  await role("link", { name: "Cancelar" }).click();
+  await role("heading", { name: "Movimientos" }).waitFor();
 });
 
 await step("validación: monto vacío muestra error", async () => {
