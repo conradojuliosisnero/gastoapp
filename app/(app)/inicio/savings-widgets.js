@@ -18,7 +18,10 @@ export function SalaryValue({ masked }) {
   useEffect(() => {
     if (!shown) return;
     const id = setTimeout(() => setShown(null), REVEAL_MS);
-    return () => clearTimeout(id);
+    return () => {
+      clearTimeout(id);
+      setShown(null); // also when the screen is hidden by navigation
+    };
   }, [shown]);
 
   return (

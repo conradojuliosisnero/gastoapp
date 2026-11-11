@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { saveSalary } from "@/app/(app)/inicio/actions";
 import { parseAmount } from "@/lib/money";
@@ -16,6 +16,7 @@ export default function SalaryForm({ defaultPeriod }) {
   const [state, formAction, pending] = useActionState(async (prev, formData) => {
     const result = await saveSalary(prev, formData);
     if (result.ok) {
+      setAmount("");
       toast("Sueldo guardado");
       router.push("/inicio");
     } else {
@@ -23,6 +24,8 @@ export default function SalaryForm({ defaultPeriod }) {
     }
     return result;
   }, null);
+  // Next keeps left screens mounted but hidden; don't leave the typed salary sitting in the page.
+  useEffect(() => () => setAmount(""), []);
 
   return (
     <form action={formAction} className="flex flex-col gap-5">
