@@ -146,6 +146,37 @@ await step("copiar gastos fijos del mes anterior", async () => {
   await text(fixed).waitFor({ state: "detached" });
 });
 
+await step("ahorro: sueldo oculto, revelar y ahorro del mes", async () => {
+  const spentLabel = `${unique} ahorro`;
+  await page.goto(`${BASE_URL}/gastos/nuevo`);
+  await v(page.getByPlaceholder("$0")).fill("10000");
+  await v(page.getByPlaceholder("Ej. Mercado")).fill(spentLabel);
+  await role("button", { name: "Guardar gasto" }).click();
+  await text(spentLabel).waitFor();
+
+  await role("link", { name: "Inicio" }).click();
+  await role("heading", { name: "Resumen" }).waitFor();
+  await role("link", { name: /Agregar mi sueldo|Cambiar sueldo/ }).click();
+  await role("heading", { name: "Sueldo mensual" }).waitFor();
+  await v(page.getByLabel("Sueldo mensual (COP)")).fill("3210000");
+  await role("button", { name: "Guardar sueldo" }).click();
+  await toastSays("Sueldo guardado");
+  await role("heading", { name: "Resumen" }).waitFor();
+
+  await text(/\$\s3\.•••\.•••/).waitFor();
+  assert.doesNotMatch(await page.content(), /3\.210\.000|3210000/, "el sueldo completo no debe llegar al navegador");
+  await role("button", { name: "Mostrar sueldo" }).click();
+  await text(/\$\s3\.210\.000/).waitFor();
+  await text(/\$\s3\.200\.000/).first().waitFor(); // ahorro del mes = 3.210.000 − 10.000
+  await role("button", { name: "Mostrar sueldo" }).waitFor({ timeout: 8000 }); // se oculta solo
+  await page.screenshot({ path: `${SHOTS}/inicio-ahorro.png` });
+
+  await role("link", { name: "Gastos" }).click();
+  await role("button", { name: `Borrar ${spentLabel}` }).click();
+  await confirmModal("Borrar");
+  await text(spentLabel).waitFor({ state: "detached" });
+});
+
 await step("sin errores de JavaScript en el navegador", async () => {
   assert.deepEqual(errors, []);
 });
