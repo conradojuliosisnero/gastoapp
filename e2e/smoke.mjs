@@ -19,6 +19,7 @@ page.on("dialog", (d) => errors.push(`diálogo nativo inesperado: ${d.message()}
 const v = (locator) => locator.filter({ visible: true });
 const text = (t, opts) => v(page.getByText(t, opts));
 const role = (r, opts) => v(page.getByRole(r, opts));
+const tab = (name) => page.getByRole("navigation", { name: "Navegación principal" }).getByRole("link", { name, exact: true });
 const toastSays = (t) => page.getByRole("status").getByText(t).waitFor();
 // Confirms through the app's own modal (never the browser's confirm()).
 async function confirmModal(button) {
@@ -55,7 +56,7 @@ await step("iniciar sesión", async () => {
 });
 
 await step("pantalla Gastos con categorías por defecto", async () => {
-  await role("link", { name: "Gastos" }).click();
+  await tab("Gastos").click();
   await role("heading", { name: "Movimientos" }).waitFor();
   await role("button", { name: /Por categoría/ }).click();
   await role("dialog").getByText("Comida", { exact: true }).waitFor();
@@ -166,7 +167,7 @@ await step("ahorro: sueldo oculto, revelar y ahorro del mes", async () => {
   await role("button", { name: "Guardar gasto" }).click();
   await text(spentLabel).waitFor();
 
-  await role("link", { name: "Inicio" }).click();
+  await tab("Inicio").click();
   await role("heading", { name: "Resumen" }).waitFor();
   await role("link", { name: /Agregar mi sueldo|Cambiar sueldo/ }).click();
   await role("heading", { name: "Sueldo mensual" }).waitFor();
@@ -183,7 +184,7 @@ await step("ahorro: sueldo oculto, revelar y ahorro del mes", async () => {
   await role("button", { name: "Mostrar sueldo" }).waitFor({ timeout: 8000 }); // se oculta solo
   await page.screenshot({ path: `${SHOTS}/inicio-ahorro.png` });
 
-  await role("link", { name: "Gastos" }).click();
+  await tab("Gastos").click();
   await role("button", { name: `Borrar ${spentLabel}` }).click();
   await confirmModal("Borrar");
   await text(spentLabel).waitFor({ state: "detached" });
@@ -217,9 +218,9 @@ await step("pago futuro: etiqueta y no cuenta como gastado", async () => {
   await text(label).waitFor();
 
   if (sameMonth) {
-    await role("link", { name: "Inicio" }).click();
+    await tab("Inicio").click();
     await text(/Pagos futuros este mes: −\$\s77\.000/).waitFor();
-    await role("link", { name: "Gastos" }).click();
+    await tab("Gastos").click();
   }
   await role("button", { name: `Borrar ${label}` }).click();
   await confirmModal("Borrar");
@@ -273,7 +274,7 @@ await step("crear categoría propia desde Nuevo gasto y borrarla", async () => {
 });
 
 await step("internet: configurar plan entre 3 y marcar pagos", async () => {
-  await role("link", { name: "Internet" }).click();
+  await tab("Internet").click();
   await role("link", { name: "Configurar plan" }).click();
   await role("heading", { name: "Plan de internet" }).waitFor();
   await v(page.getByRole("textbox", { name: "Nombre", exact: true })).fill("Internet e2e");
@@ -292,19 +293,19 @@ await step("internet: configurar plan entre 3 y marcar pagos", async () => {
 
   await role("button", { name: "Marcar pago de tu parte", exact: true }).click();
   await toastSays("Tu parte: pago registrado");
-  await role("link", { name: "Gastos" }).click();
+  await tab("Gastos").click();
   await text("Internet · Internet e2e (tu parte)").waitFor();
 
-  await role("link", { name: "Internet" }).click();
+  await tab("Internet").click();
   await role("button", { name: "Desmarcar pago de tu parte", exact: true }).click();
   await confirmModal("Desmarcar");
   await toastSays("Tu parte: pago desmarcado");
   await text("1 de 3 pagaron").waitFor();
-  await role("link", { name: "Gastos" }).click();
+  await tab("Gastos").click();
   await role("heading", { name: "Movimientos" }).waitFor();
   assert.equal(await text("Internet · Internet e2e (tu parte)").count(), 0, "tu parte desmarcada sale de gastos");
 
-  await role("link", { name: "Internet" }).click();
+  await tab("Internet").click();
   await role("link", { name: "Editar plan" }).click();
   await role("radio", { name: "Personalizado" }).click();
   await v(page.getByLabel(/^Parte de /)).nth(0).fill("50000");
@@ -319,7 +320,7 @@ await step("internet: configurar plan entre 3 y marcar pagos", async () => {
 
 await step("videojuegos: límite, compra por plataforma y lista de deseos", async () => {
   const game = `${unique} juego`;
-  await role("link", { name: "Juegos" }).click();
+  await tab("Juegos").click();
   await role("link", { name: "Poner límite" }).click();
   await role("heading", { name: "Límite mensual" }).waitFor();
   await v(page.getByPlaceholder("Sin límite")).fill("50000");
@@ -365,7 +366,7 @@ await step("videojuegos: límite, compra por plataforma y lista de deseos", asyn
 });
 
 await step("inicio resume los tres módulos", async () => {
-  await role("link", { name: "Inicio" }).click();
+  await tab("Inicio").click();
   await role("link", { name: /^Gastos .*movimiento/ }).waitFor();
   await role("link", { name: /^Internet compartido Pagaron \d+ de 3/ }).waitFor();
   await role("link", { name: /^Videojuegos .* este mes/ }).click();
@@ -377,7 +378,7 @@ await step("sin errores de JavaScript en el navegador", async () => {
 });
 
 await step("modo oscuro desde Ajustes y se mantiene al recargar", async () => {
-  await role("link", { name: "Inicio" }).click();
+  await tab("Inicio").click();
   await role("link", { name: "Ajustes" }).click();
   await role("heading", { name: "Ajustes" }).waitFor();
   await role("radio", { name: "Oscuro" }).click();
