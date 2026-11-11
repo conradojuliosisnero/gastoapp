@@ -2,7 +2,8 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { decrypt } from "@/lib/crypto";
 import { computeSavings } from "@/lib/ahorro";
-import { formatCOP, maskCOP, monthRange } from "@/lib/money";
+import { formatCOP, maskCOP, monthRange, today } from "@/lib/money";
+import { isUpcoming } from "@/lib/gastos";
 import InstallCard from "@/app/install-card";
 import { SalaryValue, SavingsBars } from "./savings-widgets";
 
@@ -36,11 +37,11 @@ export default async function InicioPage() {
   const expenseRows = incomes.length
     ? await selectAll(() => supabase.from("transactions").select("occurred_on, amount_enc").gte("occurred_on", `${incomes[0].period}-01`).lt("occurred_on", month.end))
     : [];
-  const savings = computeSavings({
-    incomes,
-    expenses: expenseRows.map((r) => ({ date: r.occurred_on, amount: Number(decrypt(r.amount_enc)) })),
-    currentPeriod: month.key,
-  });
+  const todayDate = today();
+  const expenses = expenseRows.map((r) => ({ date: r.occurred_on, amount: Number(decrypt(r.amount_enc)) }));
+  // Future-dated payments don't reduce savings until their day comes.
+  const savings = computeSavings({ incomes, expenses: expenses.filter((e) => !isUpcoming(e.date, todayDate)), currentPeriod: month.key });
+  const upcoming = expenses.filter((e) => isUpcoming(e.date, todayDate)).reduce((sum, e) => sum + e.amount, 0);
   const current = savings.current;
   const spentPct = current?.income ? Math.min(100, Math.round((current.spent / current.income) * 100)) : 0;
 
@@ -93,6 +94,14 @@ export default async function InicioPage() {
               <span className="text-base font-semibold">Ahorro del mes</span>
               <span className={`text-2xl font-bold tabular-nums ${current.saved < 0 ? "text-warn" : "text-ok"}`}>{formatCOP(current.saved)}</span>
             </div>
+            {upcoming > 0 && (
+              <p className="flex items-center justify-between gap-3 text-[13px] text-muted">
+                <span>Pagos futuros este mes: −{formatCOP(upcoming)}</span>
+                <span>
+                  Quedaría <b className={`font-semibold ${current.saved - upcoming < 0 ? "text-warn" : "text-ink"}`}>{formatCOP(current.saved - upcoming)}</b>
+                </span>
+              </p>
+            )}
           </section>
 
           <section aria-labelledby="acumulado" className="flex flex-col gap-4 rounded-[22px] bg-card p-5">

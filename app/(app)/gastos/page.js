@@ -2,8 +2,8 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { decrypt } from "@/lib/crypto";
 import { getCategories } from "@/lib/categories";
-import { summarize } from "@/lib/gastos";
-import { formatCOP, monthRange } from "@/lib/money";
+import { isUpcoming, summarize } from "@/lib/gastos";
+import { formatCOP, monthRange, today } from "@/lib/money";
 import Movements, { CopyFixedButton } from "./movements";
 
 export const metadata = { title: "Gastos" };
@@ -14,10 +14,17 @@ const Chevron = ({ d }) => (
   </svg>
 );
 
+const UpcomingIcon = () => (
+  <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-accent">
+    <circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" />
+  </svg>
+);
+
 export default async function GastosPage({ searchParams }) {
   const { mes } = await searchParams;
   const supabase = await createClient();
   const month = monthRange(mes);
+  const todayDate = today();
 
   const [categories, current, previousFixed] = await Promise.all([
     getCategories(supabase, "gastos"),
@@ -48,8 +55,9 @@ export default async function GastosPage({ searchParams }) {
     kind: t.kind,
     amount: Number(decrypt(t.amount_enc)),
     description: t.description_enc ? decrypt(t.description_enc) : null,
+    upcoming: isUpcoming(t.occurred_on, todayDate),
   }));
-  const summary = summarize(categories, movements);
+  const summary = summarize(categories, movements, todayDate);
   const hasFixed = movements.some((m) => m.kind === "fijo");
   const pct = summary.budget ? Math.min(100, Math.round((summary.total / summary.budget) * 100)) : 0;
   const over = summary.budget > 0 && summary.total > summary.budget;
@@ -86,6 +94,15 @@ export default async function GastosPage({ searchParams }) {
           </>
         ) : (
           <Link href="/gastos/presupuesto" className="flex min-h-11 items-center text-[15px] font-semibold text-accent">Definir presupuestos →</Link>
+        )}
+        {summary.upcomingCount > 0 && (
+          <div className="flex items-center justify-between gap-3 border-t border-line pt-3 text-[15px]">
+            <span className="flex items-center gap-2">
+              <UpcomingIcon />
+              Pagos futuros ({summary.upcomingCount})
+            </span>
+            <span className="font-semibold tabular-nums text-accent">{formatCOP(summary.upcoming)}</span>
+          </div>
         )}
       </section>
 

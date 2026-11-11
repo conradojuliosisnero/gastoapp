@@ -66,8 +66,16 @@ export default function Movements({ movements }) {
                 </span>
               </span>
               <span className="flex flex-col items-end gap-0.5">
-                <span className="text-base font-semibold">−{formatCOP(m.amount)}</span>
-                <span className="rounded-full bg-fill px-2 py-0.5 text-[11px] font-semibold text-ink-2">{m.kind === "fijo" ? "Fijo" : "Variable"}</span>
+                <span className={`text-base font-semibold tabular-nums ${m.upcoming ? "text-muted" : ""}`}>−{formatCOP(m.amount)}</span>
+                <span className="flex gap-1">
+                  {m.upcoming && (
+                    <span className="flex items-center gap-1 rounded-full bg-accent/12 px-2 py-0.5 text-[11px] font-semibold text-accent">
+                      <svg aria-hidden="true" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
+                      Pago futuro
+                    </span>
+                  )}
+                  <span className="rounded-full bg-fill px-2 py-0.5 text-[11px] font-semibold text-ink-2">{m.kind === "fijo" ? "Fijo" : "Variable"}</span>
+                </span>
               </span>
               <button
                 type="button"

@@ -177,6 +177,37 @@ await step("ahorro: sueldo oculto, revelar y ahorro del mes", async () => {
   await text(spentLabel).waitFor({ state: "detached" });
 });
 
+await step("pago futuro: etiqueta y no cuenta como gastado", async () => {
+  const todayStr = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Bogota" }).format(new Date());
+  const future = new Date(`${todayStr}T12:00:00Z`);
+  future.setUTCDate(future.getUTCDate() + 1);
+  const futureStr = future.toISOString().slice(0, 10);
+  const sameMonth = futureStr.slice(0, 7) === todayStr.slice(0, 7);
+  const label = `${unique} futuro`;
+
+  await page.goto(`${BASE_URL}/gastos/nuevo`);
+  await v(page.getByPlaceholder("$0")).fill("77000");
+  await v(page.getByPlaceholder("Ej. Mercado")).fill(label);
+  await v(page.locator('input[name="date"]')).fill(futureStr);
+  await role("button", { name: "Guardar gasto" }).click();
+  await page.waitForURL(new RegExp(`mes=${futureStr.slice(0, 7)}`));
+
+  const row = v(page.getByRole("listitem").filter({ hasText: label }));
+  await row.getByText("Pago futuro").waitFor();
+  await text("Pagos futuros (1)").waitFor();
+  const summary = await v(page.locator("section").filter({ hasText: "Gastado en el mes" })).innerText();
+  assert.match(summary, /Gastado en el mes\s+\$\s0\b/, "el pago futuro no debe sumar a lo gastado");
+
+  if (sameMonth) {
+    await role("link", { name: "Inicio" }).click();
+    await text(/Pagos futuros este mes: −\$\s77\.000/).waitFor();
+    await role("link", { name: "Gastos" }).click();
+  }
+  await role("button", { name: `Borrar ${label}` }).click();
+  await confirmModal("Borrar");
+  await text(label).waitFor({ state: "detached" });
+});
+
 await step("sin errores de JavaScript en el navegador", async () => {
   assert.deepEqual(errors, []);
 });
