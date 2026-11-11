@@ -75,6 +75,7 @@ export function Purchases({ items }) {
                 <span className="text-[13px] text-muted">
                   {t.type} · {shortDate.format(new Date(`${t.date}T00:00:00Z`))}
                   {t.usd != null && ` · ≈ ${formatCOP(t.amount)}`}
+                  {t.credit && ` · ${t.credit}`}
                 </span>
               </span>
               <span className="flex flex-col items-end gap-0.5">

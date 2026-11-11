@@ -4,6 +4,8 @@ import { useActionState, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createCategory, createTransaction } from "@/app/(app)/gastos/actions";
 import { formatCOP, formatMoney, parseMoney, usdToCop } from "@/lib/money";
+import { installments } from "@/lib/credit";
+import Link from "next/link";
 import { toast } from "@/lib/toast";
 import Spinner from "@/app/spinner";
 import { SaveBar, SheetHeader } from "../../sheet-header";
@@ -14,13 +16,15 @@ const COPY = {
   juegos: { title: "Nueva compra", back: "/juegos", hint: "Ej. Expansión de historia", save: "Guardar compra", saved: "Compra guardada", newCat: "Ej. Pase de batalla", legend: "Tipo", what: "Juego" },
 };
 
-export default function NewExpenseForm({ categories: initialCategories, defaultDate, module = "gastos", usdRate = null }) {
+export default function NewExpenseForm({ categories: initialCategories, defaultDate, module = "gastos", usdRate = null, cards = [] }) {
   const copy = COPY[module];
   const router = useRouter();
   const [amount, setAmount] = useState("");
   const [currency, setCurrency] = useState("COP");
   const [platform, setPlatform] = useState("PS5");
   const [date, setDate] = useState(defaultDate);
+  const [cardId, setCardId] = useState("");
+  const [count, setCount] = useState("1");
   const [categories, setCategories] = useState(initialCategories);
   const [selected, setSelected] = useState(initialCategories[0]?.id ?? "");
   const [adding, setAdding] = useState(false);
@@ -60,6 +64,19 @@ export default function NewExpenseForm({ categories: initialCategories, defaultD
         : cents
           ? `≈ ${formatCOP(usdToCop(cents, usdRate))} · 1 US$ = ${formatCOP(Math.round(usdRate))}`
           : `Tasa de hoy: 1 US$ = ${formatCOP(Math.round(usdRate))}`;
+
+  const card = cards.find((c) => c.id === cardId);
+  const pesos = currency === "USD" ? (cents && usdRate ? usdToCop(cents, usdRate) : null) : parseMoney(amount);
+  const nCuotas = Math.min(48, Math.max(1, Number(count) || 1));
+  const plan = card && pesos ? installments({ date, amount: pesos, count: nCuotas }, card) : null;
+  const monthYear = new Intl.DateTimeFormat("es-CO", { day: "numeric", month: "long", timeZone: "UTC" });
+  const creditHint = !cards.length
+    ? null
+    : !card
+      ? "Elige una tarjeta para pagar a crédito y en cuotas."
+      : plan
+        ? `${nCuotas === 1 ? "Una cuota" : `${nCuotas} cuotas de ≈ ${formatCOP(plan[plan.length - 1].amount)}`}. La primera se paga el ${monthYear.format(new Date(`${plan[0].date}T00:00:00Z`))}${currency === "USD" ? " (en pesos, tasa de hoy)" : ""}.`
+        : `Corte el día ${card.cutDay}, pago el día ${card.payDay}.`;
 
   return (
     <form action={formAction} className="flex flex-col gap-6">
@@ -146,6 +163,50 @@ export default function NewExpenseForm({ categories: initialCategories, defaultD
           </Field>
         ) : (
           <SwitchField name="fijo" label="Gasto fijo" hint="Se repite cada mes" />
+        )}
+      </Section>
+
+      <Section
+        title="Medio de pago"
+        footer={
+          cards.length ? (
+            creditHint
+          ) : (
+            <>
+              ¿Pagas con tarjeta de crédito? <Link href="/tarjetas/tarjeta" className="font-semibold text-accent">Agrega tu tarjeta</Link> para llevar las cuotas.
+            </>
+          )
+        }
+      >
+        <Field label="Pago">
+          <select
+            name="cardId"
+            value={cardId}
+            onChange={(e) => setCardId(e.target.value)}
+            className="min-w-0 max-w-full cursor-pointer appearance-none truncate rounded-lg bg-field px-2.5 py-1.5 text-right text-[15px] font-semibold text-accent outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          >
+            <option value="">Débito o efectivo</option>
+            {cards.map((c) => (
+              <option key={c.id} value={c.id}>
+                Crédito · {c.name}
+              </option>
+            ))}
+          </select>
+        </Field>
+        {card && (
+          <Field label="Cuotas" hint="1 a 48">
+            <input
+              name="installments"
+              type="number"
+              inputMode="numeric"
+              min={1}
+              max={48}
+              required
+              value={count}
+              onChange={(e) => setCount(e.target.value)}
+              className={`${inputCls} max-w-16 text-right font-semibold tabular-nums`}
+            />
+          </Field>
         )}
       </Section>
 

@@ -66,6 +66,7 @@ export default function Movements({ movements }) {
                 <span className="truncate text-base font-medium">{m.description || m.category}</span>
                 <span className="text-[13px] text-muted">
                   {m.category} · {shortDate.format(new Date(`${m.date}T00:00:00Z`))}
+                  {m.credit && ` · ${m.credit}`}
                 </span>
               </span>
               <span className="flex flex-col items-end gap-0.5">
@@ -77,6 +78,7 @@ export default function Movements({ movements }) {
                       Pago futuro
                     </span>
                   )}
+                  {m.credit && <span className="rounded-full bg-credit/15 px-2 py-0.5 text-[11px] font-semibold text-credit">Crédito</span>}
                   <span className="rounded-full bg-fill px-2 py-0.5 text-[11px] font-semibold text-ink-2">{m.kind === "fijo" ? "Fijo" : "Variable"}</span>
                 </span>
               </span>

@@ -20,6 +20,7 @@
   --color-glass-edge: var(--glass-edge);
   --color-field: var(--field);
   --color-switch: var(--switch);
+  --color-credit: var(--credit);
 }
 
 /* Colores del diseño (estilo iOS). `accent` es para texto e íconos; `primary` es el relleno de botones con texto blanco. */
@@ -42,6 +43,7 @@
   --glass-edge: rgb(255 255 255 / 0.8);
   --field: #eaf2fd;
   --switch: #d1d1d6;
+  --credit: #5e35b1;
 }
 
 /* data-theme is set before paint by the script in app/layout.js (system, light or dark). */
@@ -64,6 +66,7 @@
   --glass-edge: rgb(255 255 255 / 0.12);
   --field: rgb(77 163 255 / 0.16);
   --switch: #39393d;
+  --credit: #b39ddb;
 }
 
 body {

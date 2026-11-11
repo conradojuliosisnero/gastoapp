@@ -18,6 +18,8 @@ const newTransaction = z.object({
   module: z.enum(["gastos", "juegos"]),
   platform: z.enum(["PS5", "PC", "Otra"]).nullable(),
   currency: z.enum(["COP", "USD"]),
+  cardId: z.uuid("Tarjeta inválida.").nullable(),
+  installments: z.number().int().min(1, "Mínimo 1 cuota.").max(48, "Máximo 48 cuotas."),
 });
 
 export async function createTransaction(_prev, formData) {
@@ -32,10 +34,12 @@ export async function createTransaction(_prev, formData) {
     module,
     platform: formData.get("platform") || null,
     currency,
+    cardId: formData.get("cardId") || null,
+    installments: formData.get("cardId") ? Number(formData.get("installments") || 1) : 1,
   });
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
-  const { amount, categoryId, description, date, kind, platform } = parsed.data;
+  const { amount, categoryId, description, date, kind, platform, cardId, installments } = parsed.data;
   // USD: keep the original cents and the rate; amount_enc is the COP equivalent so every total stays in pesos.
   let usd = null;
   if (currency === "USD") {
@@ -49,6 +53,8 @@ export async function createTransaction(_prev, formData) {
     currency,
     original_amount_enc: usd ? encrypt(amount) : null,
     fx_rate: usd?.rate ?? null,
+    card_id: cardId,
+    installments: cardId ? installments : null,
     platform: module === "juegos" ? platform : null,
     category_id: categoryId,
     occurred_on: date,
@@ -79,7 +85,7 @@ export async function copyFixedFromPreviousMonth(mes) {
 
   const { data, error } = await supabase
     .from("transactions")
-    .select("category_id, occurred_on, amount_enc, description_enc")
+    .select("category_id, occurred_on, amount_enc, description_enc, card_id, installments")
     .eq("module", "gastos")
     .eq("kind", "fijo")
     .gte("occurred_on", source.start)
@@ -95,6 +101,8 @@ export async function copyFixedFromPreviousMonth(mes) {
     occurred_on: `${target.key}-${String(Math.min(Number(t.occurred_on.slice(8)), lastDay.getUTCDate())).padStart(2, "0")}`,
     amount_enc: t.amount_enc,
     description_enc: t.description_enc,
+    card_id: t.card_id,
+    installments: t.installments,
   }));
 
   if (rows.length) {

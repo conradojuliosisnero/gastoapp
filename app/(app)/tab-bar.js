@@ -12,7 +12,8 @@ gsap.registerPlugin(useGSAP);
 const ICON = {
   inicio: <><path d="M3 11 12 4l9 7" /><path d="M5 10v10h14V10" /></>,
   internet: <><path d="M5 12.5a10 10 0 0 1 14 0" /><path d="M8.5 16a5 5 0 0 1 7 0" /><path d="M2 9a15 15 0 0 1 20 0" /><circle cx="12" cy="19.5" r="1" /></>,
-  gastos: <><rect x="3" y="6" width="18" height="13" rx="2.5" /><path d="M3 10h18" /></>,
+  gastos: <><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z" /><path d="M9 8h6" /><path d="M9 12h6" /></>,
+  tarjetas: <><rect x="2.5" y="5" width="19" height="14" rx="2.5" /><path d="M2.5 10h19" /><path d="M6.5 15h4" /></>,
   juegos: <path d="M7 8h10a4 4 0 0 1 4 4v1.5a3 3 0 0 1-5.4 1.8L14.5 14h-5l-1.1 1.3A3 3 0 0 1 3 13.5V12a4 4 0 0 1 4-4z" />,
 };
 
@@ -21,6 +22,7 @@ const TABS = [
   { href: "/internet", label: "Internet", icon: ICON.internet },
   { href: "/gastos", label: "Gastos", icon: ICON.gastos },
   { href: "/juegos", label: "Juegos", icon: ICON.juegos },
+  { href: "/tarjetas", label: "Tarjetas", icon: ICON.tarjetas },
 ];
 
 export default function TabBar() {
@@ -78,11 +80,11 @@ export default function TabBar() {
     </aside>
     <div className="fixed inset-x-0 bottom-[max(16px,env(safe-area-inset-bottom))] z-20 mx-auto flex w-[calc(100%-32px)] max-w-[416px] items-center gap-3 lg:hidden">
     <nav ref={nav} aria-label="Navegación principal" className="flex-1">
-      <div className="relative grid h-16 grid-cols-4 rounded-full border border-glass-edge bg-glass p-1.5 shadow-[0_10px_30px_rgba(0,0,0,0.12),inset_0_1px_0_var(--glass-edge)] backdrop-blur-xl backdrop-saturate-[1.8]">
+      <div className="relative grid h-16 grid-cols-5 rounded-full border border-glass-edge bg-glass p-1.5 shadow-[0_10px_30px_rgba(0,0,0,0.12),inset_0_1px_0_var(--glass-edge)] backdrop-blur-xl backdrop-saturate-[1.8]">
         <span
           ref={pill}
           aria-hidden="true"
-          className={`absolute inset-y-1.5 left-1.5 w-[calc((100%-12px)/4)] rounded-full bg-accent/12 ${active < 0 ? "opacity-0" : ""}`}
+          className={`absolute inset-y-1.5 left-1.5 w-[calc((100%-12px)/5)] rounded-full bg-accent/12 ${active < 0 ? "opacity-0" : ""}`}
         />
         {TABS.map((tab, i) => (
           <Link

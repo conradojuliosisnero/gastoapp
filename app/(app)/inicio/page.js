@@ -5,6 +5,7 @@ import { decrypt } from "@/lib/crypto";
 import { computeSavings } from "@/lib/ahorro";
 import { formatCOP, maskCOP, monthRange, today } from "@/lib/money";
 import { isUpcoming } from "@/lib/gastos";
+import { getCredit } from "@/lib/cards";
 import InstallCard from "@/app/install-card";
 import { ExtraList, SalaryValue, SavingsBars } from "./savings-widgets";
 import ModulesSummary from "./modules-summary";
@@ -41,16 +42,21 @@ export default async function InicioPage() {
     : null;
 
   // shortcut: decrypts every expense since the first salary to add them up; store monthly totals if history grows into the tens of thousands.
-  const [expenseRows, extraRows] = incomes.length
+  const [expenseRows, extraRows, credit] = incomes.length
     ? await Promise.all([
-        selectAll(() => supabase.from("transactions").select("occurred_on, amount_enc").gte("occurred_on", `${startPeriod}-01`).lt("occurred_on", month.end)),
+        selectAll(() => supabase.from("transactions").select("occurred_on, amount_enc").is("card_id", null).gte("occurred_on", `${startPeriod}-01`).lt("occurred_on", month.end)),
         selectAll(() =>
           supabase.from("extra_incomes").select("id, received_on, amount_enc, description_enc").gte("received_on", `${startPeriod}-01`).lt("received_on", month.end).order("received_on", { ascending: false })
         ),
+        getCredit(supabase),
       ])
-    : [[], []];
+    : [[], [], { cuotas: [] }];
   const todayDate = today();
-  const expenses = expenseRows.map((r) => ({ date: r.occurred_on, amount: Number(decrypt(r.amount_enc)) }));
+  // Card purchases leave your pocket when each installment is paid, not on the purchase day.
+  const expenses = [
+    ...expenseRows.map((r) => ({ date: r.occurred_on, amount: Number(decrypt(r.amount_enc)) })),
+    ...credit.cuotas.filter((c) => c.date >= `${startPeriod}-01` && c.date < month.end).map((c) => ({ date: c.date, amount: c.amount })),
+  ];
   // Future-dated payments don't reduce savings until their day comes.
   const extras = extraRows.map((r) => ({
     id: r.id,

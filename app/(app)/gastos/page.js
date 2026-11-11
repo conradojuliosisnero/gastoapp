@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { decrypt } from "@/lib/crypto";
 import { getCategories } from "@/lib/categories";
+import { getCardNames } from "@/lib/card-names";
 import { isUpcoming, summarize } from "@/lib/gastos";
 import { formatCOP, monthRange, today } from "@/lib/money";
 import Movements, { CopyFixedButton } from "./movements";
@@ -29,11 +30,11 @@ export default async function GastosPage({ searchParams }) {
   const month = monthRange(mes);
   const todayDate = today();
 
-  const [categories, current, previousFixed] = await Promise.all([
+  const [categories, current, previousFixed, cardNames] = await Promise.all([
     getCategories(supabase, "gastos"),
     supabase
       .from("transactions")
-      .select("id, category_id, occurred_on, amount_enc, description_enc, kind")
+      .select("id, category_id, occurred_on, amount_enc, description_enc, kind, card_id, installments")
       .eq("module", "gastos")
       .gte("occurred_on", month.start)
       .lt("occurred_on", month.end)
@@ -46,6 +47,7 @@ export default async function GastosPage({ searchParams }) {
       .eq("kind", "fijo")
       .gte("occurred_on", monthRange(month.prev).start)
       .lt("occurred_on", month.start),
+    getCardNames(supabase),
   ]);
   if (current.error) throw current.error;
 
@@ -58,6 +60,7 @@ export default async function GastosPage({ searchParams }) {
     kind: t.kind,
     amount: Number(decrypt(t.amount_enc)),
     description: t.description_enc ? decrypt(t.description_enc) : null,
+    credit: t.card_id ? `${cardNames.get(t.card_id) ?? "Tarjeta"} · ${t.installments > 1 ? `${t.installments} cuotas` : "1 cuota"}` : null,
     upcoming: isUpcoming(t.occurred_on, todayDate),
   }));
   const summary = summarize(categories, movements, todayDate);

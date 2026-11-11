@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { decrypt } from "@/lib/crypto";
 import { getCategories } from "@/lib/categories";
+import { getCardNames } from "@/lib/card-names";
 import { isUpcoming } from "@/lib/gastos";
 import { formatCOP, monthRange, today } from "@/lib/money";
 import { Purchases, Wishlist } from "./lists";
@@ -26,11 +27,11 @@ export default async function JuegosPage({ searchParams }) {
   const months = [month];
   while (months.length < 6) months.unshift(monthRange(months[0].prev));
 
-  const [types, txs, limitRow, wishes] = await Promise.all([
+  const [types, txs, limitRow, wishes, cardNames] = await Promise.all([
     getCategories(supabase, "juegos"),
     supabase
       .from("transactions")
-      .select("id, category_id, occurred_on, amount_enc, description_enc, platform, currency, original_amount_enc")
+      .select("id, category_id, occurred_on, amount_enc, description_enc, platform, currency, original_amount_enc, card_id, installments")
       .eq("module", "juegos")
       .gte("occurred_on", months[0].start)
       .lt("occurred_on", month.end)
@@ -38,6 +39,7 @@ export default async function JuegosPage({ searchParams }) {
       .order("created_at", { ascending: false }),
     supabase.from("module_limits").select("amount_enc").eq("module", "juegos").maybeSingle(),
     supabase.from("wishlist").select("id, title, platform, currency, current_price_enc, target_price_enc").order("created_at", { ascending: false }),
+    getCardNames(supabase),
   ]);
   if (txs.error) throw txs.error;
   if (wishes.error) throw wishes.error;
@@ -52,6 +54,7 @@ export default async function JuegosPage({ searchParams }) {
     type: typeNames.get(t.category_id) ?? "Sin tipo",
     platform: t.platform ?? "Otra",
     upcoming: isUpcoming(t.occurred_on, todayDate),
+    credit: t.card_id ? `${cardNames.get(t.card_id) ?? "Tarjeta"} · ${t.installments > 1 ? `${t.installments} cuotas` : "1 cuota"}` : null,
   }));
   const thisMonth = all.filter((t) => t.date >= month.start);
   const paid = thisMonth.filter((t) => !t.upcoming);

@@ -408,6 +408,54 @@ await step("videojuegos en dólares: compra convertida a pesos y deseo en USD", 
   await toastSays("Quitado de la lista");
 });
 
+await step("tarjeta de crédito: compra en 3 cuotas y lo que hay que pagar", async () => {
+  const label = `${unique} tv`;
+  const card = `Visa ${unique.slice(-5)}`;
+  await tab("Tarjetas").click();
+  await role("link", { name: "Agregar tarjeta" }).first().click();
+  await role("heading", { name: "Nueva tarjeta" }).waitFor();
+  await v(page.getByRole("textbox", { name: "Nombre" })).fill(card);
+  await v(page.getByRole("spinbutton", { name: /Día de corte/ })).fill("15");
+  await v(page.getByRole("spinbutton", { name: /Día de pago/ })).fill("30");
+  await text(/hasta el 15 de cada mes lo pagas el 30 de ese mismo mes/).waitFor();
+  await role("button", { name: "Agregar tarjeta" }).click();
+  await toastSays(`Tarjeta "${card}" agregada`);
+  await role("link", { name: `Editar ${card}` }).waitFor();
+
+  await page.goto(`${BASE_URL}/gastos/nuevo`);
+  await amountField().fill("300000");
+  await v(page.getByPlaceholder("Ej. Mercado")).fill(label);
+  await v(page.getByLabel("Pago")).selectOption({ label: `Crédito · ${card}` });
+  await v(page.getByRole("spinbutton", { name: /Cuotas/ })).fill("3");
+  await text(/3 cuotas de ≈ \$\s100\.000/).waitFor();
+  await role("button", { name: "Guardar gasto" }).click();
+  await toastSays("Gasto guardado");
+  const row = v(page.getByRole("listitem").filter({ hasText: label }));
+  await row.getByText("Crédito", { exact: true }).waitFor();
+  await row.getByText(new RegExp(`${card} · 3 cuotas`)).waitFor();
+
+  const todayStr = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Bogota" }).format(new Date());
+  const firstMonth = Number(todayStr.slice(8)) <= 15 ? todayStr.slice(0, 7) : new Date(Date.UTC(+todayStr.slice(0, 4), +todayStr.slice(5, 7), 1)).toISOString().slice(0, 7);
+  await page.goto(`${BASE_URL}/tarjetas?mes=${firstMonth}`);
+  const cuota = v(page.getByRole("listitem").filter({ hasText: label }));
+  await cuota.getByText(`${card} · Cuota 1 de 3`).waitFor();
+  await cuota.getByText(/\$\s100\.000/).waitFor();
+  await text(/Faltan \$\s300\.000/).waitFor();
+  await page.screenshot({ path: `${SHOTS}/tarjetas.png`, fullPage: true });
+
+  await page.goto(`${BASE_URL}/gastos`);
+  await role("button", { name: `Borrar ${label}` }).click();
+  await confirmModal("Borrar");
+  await toastSays("Gasto borrado");
+  await page.goto(`${BASE_URL}/tarjetas`);
+  await role("link", { name: `Editar ${card}` }).click();
+  await role("heading", { name: "Editar tarjeta" }).waitFor();
+  await role("button", { name: "Borrar tarjeta" }).click();
+  await confirmModal("Borrar");
+  await toastSays("Tarjeta borrada");
+  await role("heading", { name: "Tarjetas de crédito" }).waitFor();
+});
+
 await step("inicio resume los tres módulos", async () => {
   await tab("Inicio").click();
   await role("link", { name: /^Gastos .*movimiento/ }).waitFor();

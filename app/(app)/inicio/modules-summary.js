@@ -3,10 +3,12 @@ import { decrypt } from "@/lib/crypto";
 import { isUpcoming } from "@/lib/gastos";
 import { formatCOP, monthRange, today } from "@/lib/money";
 import { getPlan } from "@/app/(app)/internet/data";
+import { getCredit } from "@/lib/cards";
 
 const ICON = {
-  gastos: <><rect x="3" y="6" width="18" height="13" rx="2.5" /><path d="M3 10h18" /><path d="M7 15h3" /></>,
+  gastos: <><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z" /><path d="M9 8h6" /><path d="M9 12h6" /></>,
   internet: <><path d="M5 12.5a10 10 0 0 1 14 0" /><path d="M8.5 16a5 5 0 0 1 7 0" /><path d="M2 9a15 15 0 0 1 20 0" /><circle cx="12" cy="19.5" r="1" /></>,
+  tarjetas: <><rect x="2.5" y="5" width="19" height="14" rx="2.5" /><path d="M2.5 10h19" /><path d="M6.5 15h4" /></>,
   juegos: <path d="M7 8h10a4 4 0 0 1 4 4v1.5a3 3 0 0 1-5.4 1.8L14.5 14h-5l-1.1 1.3A3 3 0 0 1 3 13.5V12a4 4 0 0 1 4-4z" />,
 };
 
@@ -14,10 +16,12 @@ const ICON = {
 export default async function ModulesSummary({ supabase }) {
   const month = monthRange();
   const todayDate = today();
-  const [{ data: txs, error }, plan] = await Promise.all([
+  const [{ data: txs, error }, plan, credit] = await Promise.all([
     supabase.from("transactions").select("module, occurred_on, amount_enc").gte("occurred_on", month.start).lt("occurred_on", month.end),
     getPlan(supabase),
+    getCredit(supabase),
   ]);
+  const cardsDue = credit.cuotas.filter((c) => c.date >= month.start && c.date < month.end).reduce((s, c) => s + c.amount, 0);
   if (error) throw error;
 
   const totals = { gastos: 0, juegos: 0 };
@@ -37,6 +41,13 @@ export default async function ModulesSummary({ supabase }) {
   const rows = [
     { href: "/gastos", key: "gastos", label: "Gastos", detail: `${formatCOP(totals.gastos)} · ${counts.gastos} ${counts.gastos === 1 ? "movimiento" : "movimientos"}`, color: "bg-[#1f7a3a]" },
     { href: "/internet", key: "internet", label: "Internet compartido", detail: internet, color: "bg-primary" },
+    {
+      href: "/tarjetas",
+      key: "tarjetas",
+      label: "Tarjetas de crédito",
+      detail: credit.cards.length ? `A pagar este mes ${formatCOP(cardsDue)}` : "Agrega tus tarjetas y cuotas",
+      color: "bg-[#5e35b1]",
+    },
     { href: "/juegos", key: "juegos", label: "Videojuegos", detail: `${formatCOP(totals.juegos)} este mes`, color: "bg-[#b4530a]" },
   ];
 
