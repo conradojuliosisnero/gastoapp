@@ -572,6 +572,7 @@ await step("borrar el plan de internet", async () => {
   await confirmModal("Borrar plan");
   await toastSays("Plan borrado");
   await role("link", { name: "Configurar plan" }).waitFor();
+  await page.goto(`${BASE_URL}/ajustes`); // the next step signs out from Ajustes
 });
 
 await step("cerrar sesión con confirmación", async () => {
