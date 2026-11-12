@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useOptimistic, useTransition } from "react";
 import { formatCOP } from "@/lib/money";
 import { toast } from "@/lib/toast";
@@ -15,7 +16,7 @@ const initials = (name) =>
     .slice(0, 2)
     .toUpperCase();
 
-export default function Members({ period, members }) {
+export default function Members({ period, members, canAdd = true }) {
   const [optimistic, setOptimistic] = useOptimistic(members, (list, id) => list.map((m) => (m.id === id ? { ...m, paid: !m.paid } : m)));
   const [, startTransition] = useTransition();
   const [confirm, dialog] = useConfirm();
@@ -43,10 +44,19 @@ export default function Members({ period, members }) {
   return (
     <section aria-labelledby="integrantes" className="flex flex-col gap-2">
       {dialog}
-      <h2 id="integrantes" className="px-1 text-[13px] font-semibold uppercase tracking-wide text-muted">Quién pagó</h2>
+      <div className="flex items-center justify-between px-1">
+        <h2 id="integrantes" className="font-display text-xl font-semibold tracking-tight">Personas</h2>
+        {canAdd && (
+          <Link href="/internet/persona" aria-label="Agregar persona" className="flex min-h-9 items-center gap-1 rounded-full bg-accent/10 px-3.5 text-[15px] font-semibold text-accent transition active:scale-95">
+            <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
+            Agregar
+          </Link>
+        )}
+      </div>
       <ul data-stagger className="overflow-hidden rounded-2xl bg-card">
         {optimistic.map((m) => (
           <li key={m.id} className="flex items-center gap-3 border-t border-line px-4 py-3 first:border-t-0">
+            <Link href={`/internet/persona?id=${m.id}`} aria-label={`Editar ${m.isMe ? "tu parte" : m.name}`} className="flex min-w-0 flex-1 items-center gap-3 rounded-lg transition active:opacity-60">
             <span aria-hidden="true" className={`flex size-10 shrink-0 items-center justify-center rounded-full text-[15px] font-semibold ${m.isMe ? "bg-primary text-white" : "bg-fill text-ink-2"}`}>
               {m.isMe ? "Tú" : initials(m.name)}
             </span>
@@ -56,6 +66,7 @@ export default function Members({ period, members }) {
                 {formatCOP(m.share)} · {m.paid ? "Pagado" : "Pendiente"}
               </span>
             </span>
+            </Link>
             <button
               type="button"
               aria-pressed={m.paid}

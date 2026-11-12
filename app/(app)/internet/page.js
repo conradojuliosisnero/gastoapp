@@ -95,14 +95,19 @@ export default async function InternetPage({ searchParams }) {
           <Progress pct={pct} className="bg-ok" />
         </div>
         <div className="flex items-center justify-between text-[13px] text-muted">
-          <span>{plan.splitMode === "equal" ? "Partes iguales" : "Partes personalizadas"}</span>
+          <span>{plan.splitMode === "equal" ? `Partes iguales · ${plan.members.length} personas` : `Partes personalizadas · ${plan.members.length} personas`}</span>
           <Link href="/internet/plan" className="flex min-h-9 items-center rounded-full bg-accent/10 px-3.5 text-[15px] font-semibold text-accent transition active:scale-95">
             Editar plan
           </Link>
         </div>
+        {plan.splitMode === "custom" && plan.members.reduce((s, m) => s + m.share, 0) !== plan.amount && (
+          <p role="status" className="rounded-xl bg-warn/10 px-3 py-2 text-[13px] font-medium text-warn">
+            Las partes suman {formatCOP(plan.members.reduce((s, m) => s + m.share, 0))} y el plan cuesta {formatCOP(plan.amount)}. Ajústalas en Editar plan.
+          </p>
+        )}
       </section>
 
-      <Members period={month.key} members={plan.members.map((m) => ({ ...m, paid: paidThisMonth.has(m.id) }))} />
+      <Members period={month.key} members={plan.members.map((m) => ({ ...m, paid: paidThisMonth.has(m.id) }))} canAdd={plan.members.length < 12} />
 
       </div>
 

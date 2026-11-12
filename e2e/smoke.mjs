@@ -346,6 +346,37 @@ await step("internet: configurar plan entre 3 y marcar pagos", async () => {
   await text(/\$\s35\.000 · Pagado/).waitFor();
 });
 
+await step("internet: agregar, editar y quitar personas", async () => {
+  await role("link", { name: "Agregar persona" }).click();
+  await role("heading", { name: "Agregar persona" }).waitFor();
+  await v(page.getByRole("textbox", { name: "Nombre" })).fill("Luis e2e");
+  await v(page.getByRole("textbox", { name: "Su parte" })).fill("10000");
+  await text(/Sobran \$\s10\.000/).waitFor();
+  await role("button", { name: "Agregar persona" }).click();
+  await toastSays("Luis e2e agregado al plan");
+  await text("4 personas").waitFor();
+  await text(/Las partes suman \$\s130\.000/).waitFor();
+
+  await role("link", { name: "Editar Luis e2e" }).click();
+  await role("heading", { name: "Editar persona" }).waitFor();
+  await v(page.getByRole("textbox", { name: "Nombre" })).fill("Luis R");
+  await role("button", { name: "Guardar cambios" }).click();
+  await toastSays("Cambios guardados");
+  await text("Luis R").waitFor();
+
+  await role("link", { name: "Editar Luis R" }).click();
+  await role("button", { name: "Quitar del plan" }).click();
+  await confirmModal("Quitar");
+  await toastSays("Luis R quitado del plan");
+  await text("3 personas").waitFor();
+  assert.equal(await text(/Las partes suman/).count(), 0, "sin aviso cuando las partes cuadran");
+
+  await role("link", { name: "Editar tu parte" }).click();
+  await role("heading", { name: "Tu parte" }).waitFor();
+  assert.equal(await role("button", { name: "Quitar del plan" }).count(), 0, "no puedes quitarte del plan");
+  await v(page.getByRole("link", { name: "Cancelar" })).click();
+});
+
 await step("videojuegos: límite, compra por plataforma y lista de deseos", async () => {
   const game = `${unique} juego`;
   await tab("Juegos").click();
@@ -533,6 +564,14 @@ await step("modo oscuro desde Ajustes y se mantiene al recargar", async () => {
 
 await step("Ajustes muestra cómo instalar la app", async () => {
   await page.getByRole("region", { name: "Instalar la app" }).waitFor();
+});
+
+await step("borrar el plan de internet", async () => {
+  await page.goto(`${BASE_URL}/internet/plan`);
+  await role("button", { name: "Borrar plan" }).click();
+  await confirmModal("Borrar plan");
+  await toastSays("Plan borrado");
+  await role("link", { name: "Configurar plan" }).waitFor();
 });
 
 await step("cerrar sesión con confirmación", async () => {

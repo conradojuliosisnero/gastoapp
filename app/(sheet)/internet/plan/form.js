@@ -1,8 +1,9 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { savePlan } from "@/app/(app)/internet/actions";
+import { deletePlan, savePlan } from "@/app/(app)/internet/actions";
+import Spinner from "@/app/spinner";
 import { computeShares } from "@/lib/internet";
 import { formatCOP, parseAmount } from "@/lib/money";
 import { toast } from "@/lib/toast";
@@ -21,6 +22,7 @@ export default function PlanForm({ plan }) {
   const [amount, setAmount] = useState(plan?.amount ?? null);
   const [splitMode, setSplitMode] = useState(plan?.splitMode ?? "equal");
   const [removedIds, setRemovedIds] = useState([]);
+  const [deleting, startDeleting] = useTransition();
   const [members, setMembers] = useState(
     plan ? plan.members.map((m) => ({ key: m.id, id: m.id, name: m.name, share: m.share })) : [blank("Yo"), blank(), blank()]
   );
@@ -130,7 +132,7 @@ export default function PlanForm({ plan }) {
             </li>
           ))}
         </ul>
-        {members.length < 8 && (
+        {members.length < 12 && (
           <button
             type="button"
             onClick={() => setMembers((list) => [...list, blank()])}
@@ -149,6 +151,31 @@ export default function PlanForm({ plan }) {
       </div>
 
       <p className="px-4 text-[13px] text-muted">Los nombres y montos se guardan cifrados. Cuando marques tu parte como pagada, también se suma a tus gastos (Servicios).</p>
+      {plan && (
+        <button
+          type="button"
+          disabled={deleting}
+          onClick={async () => {
+            const ok = await confirm({
+              title: "¿Borrar el plan de internet?",
+              message: "Se borran las personas y el historial de pagos. Tus partes ya registradas siguen en Gastos.",
+              confirmLabel: "Borrar plan",
+              destructive: true,
+            });
+            if (!ok) return;
+            startDeleting(async () => {
+              const result = await deletePlan();
+              if (result.error) return toast(result.error, "error");
+              toast("Plan borrado");
+              router.push("/internet");
+            });
+          }}
+          className="flex min-h-11 items-center justify-center gap-2 self-center rounded-full px-4 text-[15px] font-semibold text-danger transition active:scale-95 active:bg-danger/10"
+        >
+          {deleting && <Spinner />}
+          Borrar plan
+        </button>
+      )}
       <FormError error={state?.error} />
       <SaveBar pending={pending} label="Guardar plan" />
     </form>
